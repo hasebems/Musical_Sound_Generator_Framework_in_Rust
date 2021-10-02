@@ -1,4 +1,4 @@
-# Musical Sound Generator Framework (MSGF) by Rust
+# Musical Sound Generator Framework (MSGF) in Rust
 
 This software is released under the MIT License, see LICENSE.txt.
 
