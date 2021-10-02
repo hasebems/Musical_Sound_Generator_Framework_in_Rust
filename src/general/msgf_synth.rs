@@ -39,6 +39,7 @@ pub struct Synth {
     eg_tgt_value: f32,
     eg_crnt: f32,
     eg_rate: f32,
+    max_note_vol: f32, 
 }
 
 impl Synth {
@@ -50,6 +51,7 @@ impl Synth {
             eg_tgt_value: 0.0,
             eg_crnt: 0.0,
             eg_rate: 0.0,
+            max_note_vol: 0.5f32.powf(4.0), // 4bit margin
         }
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
@@ -58,7 +60,7 @@ impl Synth {
         for i in 0..abuf.sample_number {
             let mut smpl: f32 = phase.sin();
             smpl *= self.calc_eg_level(this_time.1);
-            smpl *= 0.3;    // volume
+            smpl *= self.max_note_vol;    // Max Volume
             abuf.set_abuf(i, smpl);
             phase += this_time.0;
         }
