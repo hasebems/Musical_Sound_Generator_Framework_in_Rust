@@ -65,5 +65,4 @@ impl Msgf {
         };
         audio_buffer.copy_from_abuf(abuf);
     }
-    pub fn reduce_resource(&mut self) {}
 }

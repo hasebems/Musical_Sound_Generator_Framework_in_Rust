@@ -26,8 +26,6 @@ void rust_process(struct Msgf *rust_msgf,
                   float (*abuf)[MAX_BUFFER_SIZE],
                   uint32_t in_number_frames);
 
-void rust_reduce_resource(struct Msgf *rust_msgf);
-
 void say_hello(void);
 
 void rust_msgf_destroy(struct Msgf *rust_msgf);

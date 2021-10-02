@@ -28,10 +28,6 @@ pub extern "C" fn rust_process(rust_msgf: &mut msgf_if::Msgf, abuf: &mut [f32; g
     rust_msgf.process(abuf, in_number_frames);
 }
 #[no_mangle]
-pub extern "C" fn rust_reduce_resource(rust_msgf: &mut msgf_if::Msgf) {
-    rust_msgf.reduce_resource();
-}
-#[no_mangle]
 pub extern "C" fn say_hello() {
     println!("Hello, World!");
 }
