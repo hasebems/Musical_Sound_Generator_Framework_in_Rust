@@ -9,5 +9,5 @@ edition = "2018"
 
 
 [lib]
-name = "namisyn"
+name = "msgf"
 crate-type = ["staticlib"]
