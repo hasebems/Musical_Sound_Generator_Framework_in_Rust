@@ -26,9 +26,11 @@ enum EgState {
 }
 const PITCH_OF_A: [f32; 11] =
 [
-//	-3     9     21  33   45   57   69   81    93    105   117
+//	-3     9     21    33     45     57     69     81      93      105     117 : note number
     13.75, 27.5, 55.0, 110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0
 ];
+const EG_ATTACK_TIME: f32 = 0.1;    //  [sec]
+const EG_RELEASE_TIME: f32 = 0.1;   //  [sec]
 //---------------------------------------------------------
 //		Class
 //---------------------------------------------------------
@@ -37,8 +39,10 @@ pub struct Synth {
     crnt_phase: f32,
     eg_state: EgState,
     eg_tgt_value: f32,
+    eg_src_value: f32,
     eg_crnt: f32,
-    eg_rate: f32,
+    eg_time: f32,
+    eg_dac_count: usize,
     max_note_vol: f32, 
 }
 
@@ -49,8 +53,10 @@ impl Synth {
             crnt_phase: 0.0,
             eg_state: EgState::NotYet,
             eg_tgt_value: 0.0,
+            eg_src_value: 0.0,
             eg_crnt: 0.0,
-            eg_rate: 0.0,
+            eg_time: 0.0,
+            eg_dac_count: 0,
             max_note_vol: 0.5f32.powf(4.0), // 4bit margin
         }
     }
@@ -63,37 +69,44 @@ impl Synth {
             smpl *= self.max_note_vol;    // Max Volume
             abuf.set_abuf(i, smpl);
             phase += this_time.0;
+            self.eg_dac_count += 1;
         }
         self.crnt_phase = phase;
     }
     pub fn move_to_attack(&mut self) {
         self.eg_tgt_value = 1.0;
-        self.eg_rate = 0.001;
+        self.eg_src_value = 0.0;
+        self.eg_dac_count = 0;
+        self.eg_time = EG_ATTACK_TIME*general::SAMPLING_FREQ;
         self.eg_state = EgState::Attack;
     }
     pub fn move_to_release(&mut self) {
         self.eg_tgt_value = 0.0;
-        self.eg_rate = 0.001;
+        self.eg_src_value = self.eg_crnt;
+        self.eg_dac_count = 0;
+        self.eg_time = EG_RELEASE_TIME*general::SAMPLING_FREQ;
         self.eg_state = EgState::Release;
     }
     //---------------------------------------------------------
     fn periodic_once_every_process(&self) -> (f32, f32) {
         let delta_phase: f32 = (2.0 * std::f32::consts::PI * self.pitch)/general::SAMPLING_FREQ;
-        let eg_diff: f32 = (self.eg_tgt_value - self.eg_crnt)*self.eg_rate;
+        let eg_diff: f32 = self.eg_tgt_value - self.eg_src_value;
         (delta_phase,eg_diff)
     }
     fn calc_eg_level(&mut self, eg_diff: f32) -> f32 {
         match self.eg_state {
             EgState::Attack => {
-                self.eg_crnt = self.eg_crnt + eg_diff;
-                if eg_diff > 0.0 && self.eg_tgt_value - 0.01 < self.eg_crnt {
+                let eg_val = eg_diff*(10f32.powf((self.eg_dac_count as f32)/self.eg_time))/10.0;
+                self.eg_crnt = self.eg_src_value + eg_val;
+                if eg_diff > 0.0 && self.eg_tgt_value < self.eg_crnt {
                     self.eg_crnt = self.eg_tgt_value;
                     self.eg_state = EgState::KeyOnSteady;
                 }
             },
             EgState::Release => {
-                self.eg_crnt = self.eg_crnt + eg_diff;
-                if eg_diff < 0.0 && self.eg_tgt_value + 0.01 > self.eg_crnt {
+                let eg_val = eg_diff*(10f32.powf((self.eg_dac_count as f32)/self.eg_time))/10.0;
+                self.eg_crnt = self.eg_src_value + eg_val;
+                if eg_diff < 0.0 && self.eg_tgt_value > self.eg_crnt {
                     self.eg_crnt = self.eg_tgt_value;
                     self.eg_state = EgState::KeyOffSteady;
                 }
