@@ -17,26 +17,36 @@ use crate::general::msgf_afrm;
 #[derive(PartialEq, Clone, Copy)]
 enum EgState {
     NotYet,
-    Attack,
-    _Decay,
-    KeyOnSteady,
-    Release,
+    Attack,     //  A
+    _Decay,     //  D
+    KeyOnSteady,//  S
+    Release,    //  R
     KeyOffSteady,
     _Damp,
+}
+#[derive(PartialEq)]
+enum WvType {
+    Sine,
+    _Saw,
+    _Square,
+    _Pulse,
 }
 const PITCH_OF_A: [f32; 11] =
 [
 //	-3     9     21    33     45     57     69     81      93      105     117 : note number
-    13.75, 27.5, 55.0, 110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0
+    13.75, 27.5, 55.0, 110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0  // [Hz]
 ];
+//  Voice Parameter
 const EG_ATTACK_TIME: f32 = 0.1;    //  [sec]
 const EG_RELEASE_TIME: f32 = 0.1;   //  [sec]
+
+const ABORT_FREQUENCY: f32 = 12000.0;
 //---------------------------------------------------------
 //		Class
 //---------------------------------------------------------
 pub struct Synth {
-    pitch: f32,
-    crnt_phase: f32,
+    base_pitch: f32,
+    next_phase: f32,
     eg_state: EgState,
     eg_tgt_value: f32,
     eg_src_value: f32,
@@ -44,13 +54,14 @@ pub struct Synth {
     eg_time: f32,
     eg_dac_count: usize,
     max_note_vol: f32, 
+    wv_type: WvType,
 }
 
 impl Synth {
     pub fn new(note:u8) -> Synth {
         Synth {
-            pitch: Synth::calc_pitch(note),
-            crnt_phase: 0.0,
+            base_pitch: Synth::calc_pitch(note),
+            next_phase: 0.0,
             eg_state: EgState::NotYet,
             eg_tgt_value: 0.0,
             eg_src_value: 0.0,
@@ -58,20 +69,23 @@ impl Synth {
             eg_time: 0.0,
             eg_dac_count: 0,
             max_note_vol: 0.5f32.powf(4.0), // 4bit margin
+            wv_type: WvType::Sine,
         }
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
         let this_time = self.periodic_once_every_process();
-        let mut phase = self.crnt_phase;
+        self.generate_wave(abuf, this_time.0);
+
+        let mut phase = self.next_phase;
         for i in 0..abuf.sample_number {
-            let mut smpl: f32 = phase.sin();
-            smpl *= self.calc_eg_level(this_time.1);
-            smpl *= self.max_note_vol;    // Max Volume
-            abuf.set_abuf(i, smpl);
+            let mut smpl = abuf.get_abuf(i);
+            smpl *= self.calc_eg_level(this_time.1);    // AEG
+            smpl *= self.max_note_vol;                  // Max Volume
+            abuf.set_abuf(i, smpl);                     // Set Buffer
             phase += this_time.0;
             self.eg_dac_count += 1;
         }
-        self.crnt_phase = phase;
+        self.next_phase = phase;
     }
     pub fn move_to_attack(&mut self) {
         self.eg_tgt_value = 1.0;
@@ -79,6 +93,7 @@ impl Synth {
         self.eg_dac_count = 0;
         self.eg_time = EG_ATTACK_TIME*general::SAMPLING_FREQ;
         self.eg_state = EgState::Attack;
+        self.wv_type = WvType::_Square;
     }
     pub fn move_to_release(&mut self) {
         self.eg_tgt_value = 0.0;
@@ -89,7 +104,7 @@ impl Synth {
     }
     //---------------------------------------------------------
     fn periodic_once_every_process(&self) -> (f32, f32) {
-        let delta_phase: f32 = (2.0 * std::f32::consts::PI * self.pitch)/general::SAMPLING_FREQ;
+        let delta_phase: f32 = (2.0 * std::f32::consts::PI * self.base_pitch)/general::SAMPLING_FREQ;
         let eg_diff: f32 = self.eg_tgt_value - self.eg_src_value;
         (delta_phase,eg_diff)
     }
@@ -128,5 +143,51 @@ impl Synth {
             ap *= ratio;
         }
         ap
+    }
+    fn generate_wave(&self, abuf: &mut msgf_afrm::AudioFrame, delta_phase: f32) {
+        let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
+        let mut phase = self.next_phase;
+        match self.wv_type {
+            WvType::Sine => {
+                for i in 0..abuf.sample_number {
+                    abuf.set_abuf(i, phase.sin());
+                    phase += delta_phase;
+                }
+            }
+            WvType::_Saw => {
+                for i in 0..abuf.sample_number {
+                    let mut saw: f32 = 0.0;
+                    for j in 1..max_overtone {
+                        let ot:f32 = j as f32;
+                        saw += 0.25*(phase*ot).sin()/ot;
+                    }
+                    abuf.set_abuf(i, saw);
+                    phase += delta_phase;
+                }
+            }
+            WvType::_Square => {
+                for i in 0..abuf.sample_number {
+                    let mut sq: f32 = 0.0;
+                    for j in (1..max_overtone).step_by(2) {
+                        let ot:f32 = j as f32;
+                        sq += 0.25*(phase*ot).sin()/ot;
+                    }
+                    abuf.set_abuf(i, sq);
+                    phase += delta_phase;
+                }
+            }
+            WvType::_Pulse => {
+                for i in 0..abuf.sample_number {
+                    let mut pls: f32 = 0.0;
+                    let mut ps: f32 = phase;
+                    ps %= 2.0*std::f32::consts::PI;
+                    ps /= 2.0*std::f32::consts::PI;
+                    if ps < 0.1 { pls = 0.5;}
+                    else if ps < 0.2 { pls = -0.5;}
+                    abuf.set_abuf(i, pls);
+                    phase += delta_phase;
+                }
+            }
+        }
     }
 }
