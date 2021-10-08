@@ -56,7 +56,8 @@ pub struct Synth {
     eg_crnt: f32,
     eg_time: f32,
     eg_dac_count: usize,
-    max_note_vol: f32, 
+    max_note_vol: f32,
+    pi: f32,
     wv_type: WvType,
 }
 
@@ -72,6 +73,7 @@ impl Synth {
             eg_time: 0.0,
             eg_dac_count: 0,
             max_note_vol: 0.5f32.powf(4.0), // 4bit margin
+            pi: std::f32::consts::PI,
             wv_type: WV_TYPE,
         }
     }
@@ -87,6 +89,9 @@ impl Synth {
             abuf.set_abuf(i, smpl);                     // Set Buffer
             phase += this_time.0;
             self.eg_dac_count += 1;
+        }
+        while phase > 2.0*self.pi {
+            phase -= 2.0*self.pi;
         }
         self.next_phase = phase;
     }
@@ -135,7 +140,7 @@ impl Synth {
     }
     //---------------------------------------------------------
     fn periodic_once_every_process(&self) -> (f32, f32) {
-        let delta_phase: f32 = (2.0 * std::f32::consts::PI * self.base_pitch)/general::SAMPLING_FREQ;
+        let delta_phase: f32 = (2.0 * self.pi * self.base_pitch)/general::SAMPLING_FREQ;
         let eg_diff: f32 = self.eg_tgt_value - self.eg_src_value;
         (delta_phase,eg_diff)
     }
@@ -222,8 +227,8 @@ impl Synth {
                 for i in 0..abuf.sample_number {
                     let mut pls: f32 = 0.0;
                     let mut ps: f32 = phase;
-                    ps %= 2.0*std::f32::consts::PI;
-                    ps /= 2.0*std::f32::consts::PI;
+                    ps %= 2.0*self.pi;
+                    ps /= 2.0*self.pi;
                     if ps < 0.1 { pls = 0.5;}
                     else if ps < 0.2 { pls = -0.5;}
                     abuf.set_abuf(i, pls);
