@@ -18,10 +18,10 @@ use crate::general::msgf_afrm;
 enum EgState {
     NotYet,
     Attack,     //  A
-    _Decay,     //  D
-    KeyOnSteady,//  S
+    Decay,      //  D
+    Sustain,    //  S
     Release,    //  R
-    KeyOffSteady,
+    EgDone,
     _Damp,
 }
 #[derive(PartialEq)]
@@ -37,8 +37,11 @@ const PITCH_OF_A: [f32; 11] =
     13.75, 27.5, 55.0, 110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0  // [Hz]
 ];
 //  Voice Parameter
-const EG_ATTACK_TIME: f32 = 0.1;    //  [sec]
+const EG_ATTACK_TIME: f32 = 0.02;    //  [sec]
+const EG_DECAY_TIME: f32 = 0.0;     //  [sec] 0 means no decay and no sustain level
+const EG_SUSTAIN_LEVEL: f32 = 0.5;  //  1 means same value as Attack Level
 const EG_RELEASE_TIME: f32 = 0.1;   //  [sec]
+const WV_TYPE: WvType = WvType::Sine;
 
 const ABORT_FREQUENCY: f32 = 12000.0;
 //---------------------------------------------------------
@@ -69,7 +72,7 @@ impl Synth {
             eg_time: 0.0,
             eg_dac_count: 0,
             max_note_vol: 0.5f32.powf(4.0), // 4bit margin
-            wv_type: WvType::Sine,
+            wv_type: WV_TYPE,
         }
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
@@ -88,19 +91,47 @@ impl Synth {
         self.next_phase = phase;
     }
     pub fn move_to_attack(&mut self) {
-        self.eg_tgt_value = 1.0;
         self.eg_src_value = 0.0;
+        self.eg_tgt_value = 1.0;
         self.eg_dac_count = 0;
         self.eg_time = EG_ATTACK_TIME*general::SAMPLING_FREQ;
         self.eg_state = EgState::Attack;
-        self.wv_type = WvType::_Square;
+    }
+    pub fn move_to_decay(&mut self) {
+        if EG_DECAY_TIME == 0.0 {
+            self.move_to_sustain();
+        } else {
+            self.eg_src_value = self.eg_crnt;
+            self.eg_tgt_value = EG_SUSTAIN_LEVEL;
+            self.eg_dac_count = 0;
+            self.eg_time = EG_DECAY_TIME*general::SAMPLING_FREQ;
+            self.eg_state = EgState::Decay;
+        }
+    }
+    pub fn move_to_sustain(&mut self) {
+        if EG_SUSTAIN_LEVEL == 0.0 {
+            self.move_to_egdone();
+        } else {
+            self.eg_src_value = self.eg_crnt;
+            self.eg_tgt_value = EG_SUSTAIN_LEVEL;
+            self.eg_dac_count = 0;
+            self.eg_time = 0.0;
+            self.eg_state = EgState::Sustain;
+        }
     }
     pub fn move_to_release(&mut self) {
-        self.eg_tgt_value = 0.0;
         self.eg_src_value = self.eg_crnt;
+        self.eg_tgt_value = 0.0;
         self.eg_dac_count = 0;
         self.eg_time = EG_RELEASE_TIME*general::SAMPLING_FREQ;
         self.eg_state = EgState::Release;
+    }
+    pub fn move_to_egdone(&mut self) {
+        self.eg_src_value = 0.0;
+        self.eg_tgt_value = 0.0;
+        self.eg_dac_count = 0;
+        self.eg_time = 0.0;
+        self.eg_state = EgState::EgDone;
     }
     //---------------------------------------------------------
     fn periodic_once_every_process(&self) -> (f32, f32) {
@@ -108,22 +139,33 @@ impl Synth {
         let eg_diff: f32 = self.eg_tgt_value - self.eg_src_value;
         (delta_phase,eg_diff)
     }
+    fn calc_delta_eg(&self, eg_diff: f32) -> f32 {
+        eg_diff*(10f32.powf((self.eg_dac_count as f32)/self.eg_time))/10.0
+    }
     fn calc_eg_level(&mut self, eg_diff: f32) -> f32 {
         match self.eg_state {
             EgState::Attack => {
-                let eg_val = eg_diff*(10f32.powf((self.eg_dac_count as f32)/self.eg_time))/10.0;
-                self.eg_crnt = self.eg_src_value + eg_val;
+                let delta_eg = self.calc_delta_eg(eg_diff);
+                self.eg_crnt = self.eg_src_value + delta_eg;
                 if eg_diff > 0.0 && self.eg_tgt_value < self.eg_crnt {
                     self.eg_crnt = self.eg_tgt_value;
-                    self.eg_state = EgState::KeyOnSteady;
+                    self.move_to_decay();
                 }
             },
-            EgState::Release => {
-                let eg_val = eg_diff*(10f32.powf((self.eg_dac_count as f32)/self.eg_time))/10.0;
-                self.eg_crnt = self.eg_src_value + eg_val;
+            EgState::Decay => {
+                let delta_eg = self.calc_delta_eg(eg_diff);
+                self.eg_crnt = self.eg_src_value + delta_eg;
                 if eg_diff < 0.0 && self.eg_tgt_value > self.eg_crnt {
                     self.eg_crnt = self.eg_tgt_value;
-                    self.eg_state = EgState::KeyOffSteady;
+                    self.move_to_sustain();
+                }
+            }
+            EgState::Sustain => {}
+            EgState::Release => {
+                let delta_eg = self.calc_delta_eg(eg_diff);
+                self.eg_crnt = self.eg_src_value + delta_eg;
+                if eg_diff < 0.0 && self.eg_tgt_value > self.eg_crnt {
+                    self.move_to_egdone();
                 }
             },
             _ => {},
