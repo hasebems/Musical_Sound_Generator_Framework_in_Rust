@@ -26,7 +26,7 @@ enum EgState {
 }
 #[derive(PartialEq)]
 enum WvType {
-    Sine,
+    _Sine,
     _Saw,
     _Square,
     _Pulse,
@@ -37,11 +37,11 @@ const PITCH_OF_A: [f32; 11] =
     13.75, 27.5, 55.0, 110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0  // [Hz]
 ];
 //  Voice Parameter
-const EG_ATTACK_TIME: f32 = 0.02;    //  [sec]
-const EG_DECAY_TIME: f32 = 0.0;     //  [sec] 0 means no decay and no sustain level
-const EG_SUSTAIN_LEVEL: f32 = 0.5;  //  1 means same value as Attack Level
-const EG_RELEASE_TIME: f32 = 0.1;   //  [sec]
-const WV_TYPE: WvType = WvType::Sine;
+const EG_ATTACK_RATE: f32 = 0.01;     //  0.0-1.0
+const EG_DECAY_RATE: f32 = 0.0001;     //  0.0-1.0 : 1.0 means no decay and no sustain level
+const EG_SUSTAIN_LEVEL: f32 = 0.1;   //  1 means same value as Attack Level
+const EG_RELEASE_RATE: f32 = 0.02;    //  0.0-1.0
+const WV_TYPE: WvType = WvType::_Sine;
 
 const ABORT_FREQUENCY: f32 = 12000.0;
 //---------------------------------------------------------
@@ -54,8 +54,8 @@ pub struct Synth {
     eg_tgt_value: f32,
     eg_src_value: f32,
     eg_crnt: f32,
-    eg_time: f32,
-    eg_dac_count: usize,
+    eg_rate: f32,
+    eg_nrlz_value: f32,
     max_note_vol: f32,
     pi: f32,
     wv_type: WvType,
@@ -70,26 +70,28 @@ impl Synth {
             eg_tgt_value: 0.0,
             eg_src_value: 0.0,
             eg_crnt: 0.0,
-            eg_time: 0.0,
-            eg_dac_count: 0,
+            eg_rate: 1.0,
+            eg_nrlz_value: 0.0,
             max_note_vol: 0.5f32.powf(4.0), // 4bit margin
             pi: std::f32::consts::PI,
             wv_type: WV_TYPE,
         }
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
-        let this_time = self.periodic_once_every_process();
-        self.generate_wave(abuf, this_time.0);
+        let delta_phase = (2.0 * self.pi * self.base_pitch)/general::SAMPLING_FREQ;
 
-        let mut phase = self.next_phase;
+        //  Oscillator
+        self.generate_wave(abuf, delta_phase);
+
+        //  AEG
+        self.calc_eg_level(abuf);
+
         for i in 0..abuf.sample_number {
-            let mut smpl = abuf.get_abuf(i);
-            smpl *= self.calc_eg_level(this_time.1);    // AEG
-            smpl *= self.max_note_vol;                  // Max Volume
-            abuf.set_abuf(i, smpl);                     // Set Buffer
-            phase += this_time.0;
-            self.eg_dac_count += 1;
+            abuf.mul_abuf(i, self.max_note_vol);
         }
+
+        //  Update next_phase
+        let mut phase = self.next_phase + delta_phase*(abuf.sample_number as f32);
         while phase > 2.0*self.pi {
             phase -= 2.0*self.pi;
         }
@@ -98,84 +100,86 @@ impl Synth {
     pub fn move_to_attack(&mut self) {
         self.eg_src_value = 0.0;
         self.eg_tgt_value = 1.0;
-        self.eg_dac_count = 0;
-        self.eg_time = EG_ATTACK_TIME*general::SAMPLING_FREQ;
+        self.eg_rate = EG_ATTACK_RATE;
         self.eg_state = EgState::Attack;
+        self.eg_nrlz_value = 0.0;
     }
-    pub fn move_to_decay(&mut self) {
-        if EG_DECAY_TIME == 0.0 {
-            self.move_to_sustain();
+    pub fn move_to_decay(&mut self, eg_crnt: f32) {
+        if EG_DECAY_RATE == 1.0 {
+            self.move_to_sustain(eg_crnt);
         } else {
-            self.eg_src_value = self.eg_crnt;
+            self.eg_src_value = eg_crnt;
             self.eg_tgt_value = EG_SUSTAIN_LEVEL;
-            self.eg_dac_count = 0;
-            self.eg_time = EG_DECAY_TIME*general::SAMPLING_FREQ;
+            self.eg_rate = EG_DECAY_RATE;
             self.eg_state = EgState::Decay;
+            self.eg_nrlz_value = 0.0;
         }
     }
-    pub fn move_to_sustain(&mut self) {
+    pub fn move_to_sustain(&mut self, eg_crnt: f32) {
         if EG_SUSTAIN_LEVEL == 0.0 {
             self.move_to_egdone();
         } else {
-            self.eg_src_value = self.eg_crnt;
+            self.eg_src_value = eg_crnt;
             self.eg_tgt_value = EG_SUSTAIN_LEVEL;
-            self.eg_dac_count = 0;
-            self.eg_time = 0.0;
+            self.eg_rate = 0.0;
             self.eg_state = EgState::Sustain;
+            self.eg_nrlz_value = 0.0;
         }
     }
     pub fn move_to_release(&mut self) {
         self.eg_src_value = self.eg_crnt;
         self.eg_tgt_value = 0.0;
-        self.eg_dac_count = 0;
-        self.eg_time = EG_RELEASE_TIME*general::SAMPLING_FREQ;
+        self.eg_rate = EG_RELEASE_RATE;
         self.eg_state = EgState::Release;
+        self.eg_nrlz_value = 0.0;
     }
     pub fn move_to_egdone(&mut self) {
         self.eg_src_value = 0.0;
         self.eg_tgt_value = 0.0;
-        self.eg_dac_count = 0;
-        self.eg_time = 0.0;
+        self.eg_rate = 0.0;
         self.eg_state = EgState::EgDone;
+        self.eg_nrlz_value = 0.0;
     }
     //---------------------------------------------------------
-    fn periodic_once_every_process(&self) -> (f32, f32) {
-        let delta_phase: f32 = (2.0 * self.pi * self.base_pitch)/general::SAMPLING_FREQ;
-        let eg_diff: f32 = self.eg_tgt_value - self.eg_src_value;
-        (delta_phase,eg_diff)
-    }
-    fn calc_delta_eg(&self, eg_diff: f32) -> f32 {
-        eg_diff*(10f32.powf((self.eg_dac_count as f32)/self.eg_time))/10.0
-    }
-    fn calc_eg_level(&mut self, eg_diff: f32) -> f32 {
-        match self.eg_state {
-            EgState::Attack => {
-                let delta_eg = self.calc_delta_eg(eg_diff);
-                self.eg_crnt = self.eg_src_value + delta_eg;
-                if eg_diff > 0.0 && self.eg_tgt_value < self.eg_crnt {
-                    self.eg_crnt = self.eg_tgt_value;
-                    self.move_to_decay();
-                }
-            },
-            EgState::Decay => {
-                let delta_eg = self.calc_delta_eg(eg_diff);
-                self.eg_crnt = self.eg_src_value + delta_eg;
-                if eg_diff < 0.0 && self.eg_tgt_value > self.eg_crnt {
-                    self.eg_crnt = self.eg_tgt_value;
-                    self.move_to_sustain();
-                }
-            }
-            EgState::Sustain => {}
-            EgState::Release => {
-                let delta_eg = self.calc_delta_eg(eg_diff);
-                self.eg_crnt = self.eg_src_value + delta_eg;
-                if eg_diff < 0.0 && self.eg_tgt_value > self.eg_crnt {
-                    self.move_to_egdone();
-                }
-            },
-            _ => {},
+    fn calc_delta_eg(&mut self, eg_diff: f32) -> f32 {
+        let mut nrlz = self.eg_nrlz_value;
+        if nrlz > 0.99 {
+            nrlz += 0.001;
+            if nrlz > 1.01 {nrlz = 1.01;}
+        } else {
+            nrlz += (1.0-self.eg_nrlz_value)*(self.eg_rate);
         }
-        self.eg_crnt
+        self.eg_nrlz_value = nrlz;
+        eg_diff*nrlz + self.eg_src_value
+    }
+    fn calc_eg_level(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
+        let eg_diff: f32 = self.eg_tgt_value - self.eg_src_value;
+        for i in 0..abuf.sample_number {
+            let mut eg_crnt: f32 = self.eg_tgt_value;
+            match self.eg_state {
+                EgState::Attack => {
+                    eg_crnt = self.calc_delta_eg(eg_diff);
+                    if eg_diff > 0.0 && self.eg_tgt_value <= eg_crnt {
+                        self.move_to_decay(self.eg_tgt_value);
+                    }
+                },
+                EgState::Decay => {
+                    eg_crnt = self.calc_delta_eg(eg_diff);
+                    if eg_diff < 0.0 && self.eg_tgt_value >= eg_crnt {
+                        self.move_to_sustain(self.eg_tgt_value);
+                    }
+                },
+                EgState::Release => {
+                    eg_crnt = self.calc_delta_eg(eg_diff);
+                    if eg_diff < 0.0 && self.eg_tgt_value >= eg_crnt {
+                        self.move_to_egdone();
+                    }
+                },
+                _ => {},
+            }
+            abuf.mul_abuf(i, eg_crnt);
+            self.eg_crnt = eg_crnt;
+        }
     }
     fn calc_pitch(note:u8) -> f32 {
         let solfa_name: u8 = (note + 3)%12;
@@ -191,7 +195,7 @@ impl Synth {
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         let mut phase = self.next_phase;
         match self.wv_type {
-            WvType::Sine => {
+            WvType::_Sine => {
                 for i in 0..abuf.sample_number {
                     abuf.set_abuf(i, phase.sin());
                     phase += delta_phase;
