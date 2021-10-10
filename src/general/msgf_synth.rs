@@ -178,15 +178,11 @@ impl Synth {
         self.eg_crnt
     }
     fn calc_pitch(note:u8) -> f32 {
-        let mut tone_name: u8 = note + 3;
-        let mut octave: usize = 0;
-        if note >= 9 {
-            tone_name = (note - 9)%12;
-            octave = ((note as usize) - 9)/12 + 1;
-        }
+        let solfa_name: u8 = (note + 3)%12;
+        let octave: usize = ((note as usize) + 3)/12;
         let mut ap: f32 = PITCH_OF_A[octave];
         let ratio: f32 = (2_f32.ln()/12_f32).exp();
-        for _ in 0..tone_name {
+        for _ in 0..solfa_name {
             ap *= ratio;
         }
         ap
