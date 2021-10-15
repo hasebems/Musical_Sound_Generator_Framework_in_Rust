@@ -73,11 +73,7 @@ impl Note {
         self.status = NoteStatus::DuringDamp;
         self.damp_counter = 0;
     }
-
-    //---------------------------------------------------------
-    //		Manage Note Level
-    //---------------------------------------------------------
-    pub fn manage_note_level(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
+    fn manage_note_level(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
         if self.status != NoteStatus::DuringDamp {
             //	Check Level
             let level = abuf.get_max_level();
