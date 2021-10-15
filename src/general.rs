@@ -11,7 +11,6 @@ pub mod msgf_part;
 pub mod msgf_inst;
 pub mod msgf_note;
 pub mod msgf_afrm;
-pub mod msgf_synth;
 //---------------------------------------------------------
 //		Constants
 //---------------------------------------------------------

@@ -10,7 +10,8 @@
 //
 use crate::general;
 use crate::general::msgf_afrm;
-use crate::general::msgf_synth;
+use crate::engine::msgf_aeg;
+use crate::engine::msgf_osc;
 
 //---------------------------------------------------------
 //		Constants
@@ -25,12 +26,16 @@ pub enum NoteStatus {
 //		Class
 //---------------------------------------------------------
 pub struct Note {
+    // Note
     note: u8,
     vel: u8,
     status: NoteStatus,
     damp_counter: u32,
     lvl_check_buf: msgf_afrm::AudioFrame,
-    synth: msgf_synth::Synth,
+    // Synth
+    osc: msgf_osc::Osc,
+    aeg: msgf_aeg::Aeg,
+    max_note_vol: f32,
 }
 
 const DAMP_RATE: u32 = 400;		// * dac time(22.68usec)
@@ -49,15 +54,17 @@ impl Note {
             status: NoteStatus::DuringNoteOn,
             damp_counter: 0,
             lvl_check_buf: msgf_afrm::AudioFrame::new((general::SAMPLING_FREQ/100.0) as usize),
-            synth: msgf_synth::Synth::new(note),
+            osc: msgf_osc::Osc::new(note),
+            aeg: msgf_aeg::Aeg::new(),
+            max_note_vol: 0.5f32.powf(4.0), // 4bit margin
         }
     }
     pub fn start_sound(&mut self) {
-        self.synth.move_to_attack();
+        self.aeg.move_to_attack();
     }
     pub fn note_off(&mut self) {
         self.status = NoteStatus::AfterNoteOff;
-        self.synth.move_to_release();
+        self.aeg.move_to_release()
     }
     pub fn note_num(&self) -> u8 {self.note}
     pub fn _velocity(&self) -> u8 {self.vel}
@@ -88,7 +95,16 @@ impl Note {
         }
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
-        self.synth.process(abuf);
+        //  Oscillator
+        self.osc.process(abuf);
+
+        //  AEG
+        self.aeg.process(abuf);
+
+        //  Volume
+        for i in 0..abuf.sample_number {
+            abuf.mul_abuf(i, self.max_note_vol);
+        }
         self.manage_note_level(abuf);
     }
 }

@@ -13,6 +13,7 @@
 //
 mod msgf_if;
 mod general;
+mod engine;
 
 #[no_mangle]
 pub extern "C" fn rust_msgf_new() -> *mut msgf_if::Msgf {
