@@ -11,12 +11,13 @@
 use crate::general;
 use crate::general::msgf_afrm;
 
+#[allow(dead_code)]
 #[derive(PartialEq)]
 enum WvType {
-    _Sine,
-    _Saw,
-    _Square,
-    _Pulse,
+    Sine,
+    Saw,
+    Square,
+    Pulse,
 }
 //---------------------------------------------------------
 //		Constants
@@ -26,9 +27,20 @@ const PITCH_OF_A: [f32; 11] =
 //	-3     9     21    33     45     57     69     81      93      105     117 : note number
     13.75, 27.5, 55.0, 110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0  // [Hz]
 ];
-const WV_TYPE: WvType = WvType::_Sine;
 const ABORT_FREQUENCY: f32 = 12000.0;
 
+//---------------------------------------------------------
+pub struct OscParameter {
+    coarse_tune: i32,   //  [semitone]
+    fine_tune: f32,     //  [cent]
+    wv_type: WvType,
+}
+//  Voice Parameter
+const OSC_PRM: OscParameter = OscParameter {
+    coarse_tune: 0,     //  i32
+    fine_tune: 0.0,   //  f32
+    wv_type: WvType::Pulse,
+};
 //---------------------------------------------------------
 //		Class
 //---------------------------------------------------------
@@ -45,17 +57,26 @@ impl Osc {
             base_pitch: Osc::calc_pitch(note),
             next_phase: 0.0,
             pi: std::f32::consts::PI,
-            wv_type: WV_TYPE,
+            wv_type: OSC_PRM.wv_type,
         }
     }
+    fn limit_note(calculated_note:i32) -> u8 {
+        let mut note = calculated_note;
+        while note < 0 { note += 12;}
+        while note >= 128 { note -= 12;}
+        note as u8
+    }
     fn calc_pitch(note:u8) -> f32 {
-        let solfa_name: u8 = (note + 3)%12;
-        let octave: usize = ((note as usize) + 3)/12;
-        let mut ap: f32 = PITCH_OF_A[octave];
-        let ratio: f32 = (2_f32.ln()/12_f32).exp();
+        let tune_note: u8 = Osc::limit_note(note as i32 + OSC_PRM.coarse_tune);
+        let solfa_name: u8 = (tune_note + 3)%12;
+        let octave: usize = ((tune_note as usize) + 3)/12;
+        let mut ap = PITCH_OF_A[octave];
+        let ratio = (2_f32.ln()/12_f32).exp();
         for _ in 0..solfa_name {
             ap *= ratio;
         }
+        let cratio = (OSC_PRM.fine_tune*(2_f32.ln()/1200_f32)).exp();
+        ap *= cratio;
         ap
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
@@ -63,13 +84,13 @@ impl Osc {
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         let mut phase = self.next_phase;
         match self.wv_type {
-            WvType::_Sine => {
+            WvType::Sine => {
                 for i in 0..abuf.sample_number {
                     abuf.set_abuf(i, phase.sin());
                     phase += delta_phase;
                 }
             }
-            WvType::_Saw => {
+            WvType::Saw => {
                 for i in 0..abuf.sample_number {
                     let mut saw: f32 = 0.0;
                     for j in 1..max_overtone {
@@ -80,7 +101,7 @@ impl Osc {
                     phase += delta_phase;
                 }
             }
-            WvType::_Square => {
+            WvType::Square => {
                 for i in 0..abuf.sample_number {
                     let mut sq: f32 = 0.0;
                     for j in (1..max_overtone).step_by(2) {
@@ -91,7 +112,7 @@ impl Osc {
                     phase += delta_phase;
                 }
             }
-            WvType::_Pulse => {
+            WvType::Pulse => {
                 for i in 0..abuf.sample_number {
                     let mut pls: f32 = 0.0;
                     let mut ps: f32 = phase;
