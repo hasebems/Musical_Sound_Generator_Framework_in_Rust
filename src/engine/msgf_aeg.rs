@@ -21,6 +21,8 @@ pub enum EgState {
     _Damp,
 }
 //---------------------------------------------------------
+//		Synth. Parameter
+//---------------------------------------------------------
 pub struct AegParameter {
     attack_rate: f32,
     decay_rate: f32,

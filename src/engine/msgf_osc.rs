@@ -30,6 +30,8 @@ const PITCH_OF_A: [f32; 11] =
 const ABORT_FREQUENCY: f32 = 12000.0;
 
 //---------------------------------------------------------
+//		Synth. Parameter
+//---------------------------------------------------------
 pub struct OscParameter {
     coarse_tune: i32,   //  [semitone]
     fine_tune: f32,     //  [cent]
@@ -41,8 +43,6 @@ const OSC_PRM: OscParameter = OscParameter {
     fine_tune: 0.0,   //  f32
     wv_type: WvType::Pulse,
 };
-//---------------------------------------------------------
-//		Class
 //---------------------------------------------------------
 pub struct Osc {
     base_pitch: f32,
