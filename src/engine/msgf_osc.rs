@@ -41,7 +41,7 @@ pub struct OscParameter {
 const OSC_PRM: OscParameter = OscParameter {
     coarse_tune: 0,     //  i32
     fine_tune: 0.0,   //  f32
-    wv_type: WvType::Pulse,
+    wv_type: WvType::Square,
 };
 //---------------------------------------------------------
 pub struct Osc {
@@ -77,54 +77,50 @@ impl Osc {
         ap *= cratio;
         ap
     }
-    fn mul_lfo(delta: f32, lfo_depth: f32) -> f32 {
-        delta*(1.0+lfo_depth)
-    }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_afrm::AudioFrame) {
-        let piconst = (2.0 * general::PI)/general::SAMPLING_FREQ;
-        let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
-        let mut phase = self.next_phase;
+        let wavefn: fn(f32, usize) -> f32;
         match self.wv_type {
             WvType::Sine => {
-                for i in 0..abuf.sample_number {
-                    abuf.set_abuf(i, phase.sin());
-                    phase += Osc::mul_lfo(self.base_pitch*piconst, lbuf.get_abuf(i));
-                }
+                wavefn = |x, _y| x.sin();
             }
             WvType::Saw => {
-                for i in 0..abuf.sample_number {
+                wavefn = |x, y| {
                     let mut saw: f32 = 0.0;
-                    for j in 1..max_overtone {
+                    for j in 1..y {
                         let ot:f32 = j as f32;
-                        saw += 0.25*(phase*ot).sin()/ot;
+                        saw += 0.25*(x*ot).sin()/ot;
                     }
-                    abuf.set_abuf(i, saw);
-                    phase += Osc::mul_lfo(self.base_pitch*piconst, lbuf.get_abuf(i));
-                }
+                    saw
+                };
             }
             WvType::Square => {
-                for i in 0..abuf.sample_number {
+                wavefn = |x, y| {
                     let mut sq: f32 = 0.0;
-                    for j in (1..max_overtone).step_by(2) {
+                    for j in (1..y).step_by(2) {
                         let ot:f32 = j as f32;
-                        sq += 0.25*(phase*ot).sin()/ot;
+                        sq += 0.25*(x*ot).sin()/ot;
                     }
-                    abuf.set_abuf(i, sq);
-                    phase += Osc::mul_lfo(self.base_pitch*piconst, lbuf.get_abuf(i));
-                }
+                    sq
+                };
             }
             WvType::Pulse => {
-                for i in 0..abuf.sample_number {
+                wavefn = |x, _y| {
                     let mut pls: f32 = 0.0;
-                    let mut ps: f32 = phase;
+                    let mut ps: f32 = x;
                     ps %= 2.0*general::PI;
                     ps /= 2.0*general::PI;
                     if ps < 0.1 { pls = 0.5;}
                     else if ps < 0.2 { pls = -0.5;}
-                    abuf.set_abuf(i, pls);
-                    phase += Osc::mul_lfo(self.base_pitch*piconst, lbuf.get_abuf(i));
+                    pls
                 }
             }
+        }
+        let piconst = (2.0 * general::PI)/general::SAMPLING_FREQ;
+        let mut phase = self.next_phase;
+        let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
+        for i in 0..abuf.sample_number {
+            abuf.set_abuf(i, wavefn(phase, max_overtone));
+            phase += (self.base_pitch*piconst) * (1.0 + lbuf.get_abuf(i));
         }
         //  Update next_phase
         while phase > 2.0*general::PI {
