@@ -12,6 +12,7 @@ use crate::general;
 use crate::general::msgf_afrm;
 use crate::engine::msgf_aeg;
 use crate::engine::msgf_osc;
+use crate::engine::msgf_lfo;
 
 //---------------------------------------------------------
 //		Constants
@@ -35,6 +36,7 @@ pub struct Note {
     // Synth
     osc: msgf_osc::Osc,
     aeg: msgf_aeg::Aeg,
+    lfo: msgf_lfo::Lfo,
     max_note_vol: f32,
 }
 
@@ -56,6 +58,7 @@ impl Note {
             lvl_check_buf: msgf_afrm::AudioFrame::new((general::SAMPLING_FREQ/100.0) as usize),
             osc: msgf_osc::Osc::new(note),
             aeg: msgf_aeg::Aeg::new(),
+            lfo: msgf_lfo::Lfo::new(),
             max_note_vol: 0.5f32.powf(4.0), // 4bit margin
         }
     }
@@ -90,9 +93,13 @@ impl Note {
             }
         }
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
+    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, in_number_frames: usize) {
+        //  LFO
+        let lbuf = &mut msgf_afrm::AudioFrame::new(in_number_frames);
+        self.lfo.process(lbuf);
+
         //  Oscillator
-        self.osc.process(abuf);
+        self.osc.process(abuf, lbuf);
 
         //  AEG
         self.aeg.process(abuf);

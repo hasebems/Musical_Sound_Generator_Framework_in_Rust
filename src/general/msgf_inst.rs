@@ -59,7 +59,7 @@ impl Inst {
         for i in 0..sz {
             if let Some(nt) = self.ntvec.get_mut(i) {
                 let nt_audio = &mut msgf_afrm::AudioFrame::new(in_number_frames);
-                nt.process(nt_audio);
+                nt.process(nt_audio, in_number_frames);
                 no_sound[i] = abuf.mix_and_check_no_sound(nt_audio);
             }
         }

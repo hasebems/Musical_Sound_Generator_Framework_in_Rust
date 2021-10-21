@@ -77,6 +77,10 @@ impl Osc {
         ap *= cratio;
         ap
     }
+    fn mul_lfo(delta: f32, lfo_depth: f32) -> f32 {
+        delta*(1.0+lfo_depth)
+    }
+    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_afrm::AudioFrame) {
         let piconst = (2.0 * general::PI)/general::SAMPLING_FREQ;
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         let mut phase = self.next_phase;
@@ -84,7 +88,7 @@ impl Osc {
             WvType::Sine => {
                 for i in 0..abuf.sample_number {
                     abuf.set_abuf(i, phase.sin());
-                    phase += delta_phase;
+                    phase += Osc::mul_lfo(self.base_pitch*piconst, lbuf.get_abuf(i));
                 }
             }
             WvType::Saw => {
@@ -95,7 +99,7 @@ impl Osc {
                         saw += 0.25*(phase*ot).sin()/ot;
                     }
                     abuf.set_abuf(i, saw);
-                    phase += delta_phase;
+                    phase += Osc::mul_lfo(self.base_pitch*piconst, lbuf.get_abuf(i));
                 }
             }
             WvType::Square => {
@@ -106,7 +110,7 @@ impl Osc {
                         sq += 0.25*(phase*ot).sin()/ot;
                     }
                     abuf.set_abuf(i, sq);
-                    phase += delta_phase;
+                    phase += Osc::mul_lfo(self.base_pitch*piconst, lbuf.get_abuf(i));
                 }
             }
             WvType::Pulse => {
@@ -118,7 +122,7 @@ impl Osc {
                     if ps < 0.1 { pls = 0.5;}
                     else if ps < 0.2 { pls = -0.5;}
                     abuf.set_abuf(i, pls);
-                    phase += delta_phase;
+                    phase += Osc::mul_lfo(self.base_pitch*piconst, lbuf.get_abuf(i));
                 }
             }
         }
