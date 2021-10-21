@@ -47,7 +47,6 @@ const OSC_PRM: OscParameter = OscParameter {
 pub struct Osc {
     base_pitch: f32,
     next_phase: f32,
-    pi: f32,
     wv_type: WvType,
 }
 
@@ -56,7 +55,6 @@ impl Osc {
         Osc {
             base_pitch: Osc::calc_pitch(note),
             next_phase: 0.0,
-            pi: std::f32::consts::PI,
             wv_type: OSC_PRM.wv_type,
         }
     }
@@ -79,8 +77,7 @@ impl Osc {
         ap *= cratio;
         ap
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
-        let delta_phase = (2.0 * self.pi * self.base_pitch)/general::SAMPLING_FREQ;
+        let piconst = (2.0 * general::PI)/general::SAMPLING_FREQ;
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         let mut phase = self.next_phase;
         match self.wv_type {
@@ -116,8 +113,8 @@ impl Osc {
                 for i in 0..abuf.sample_number {
                     let mut pls: f32 = 0.0;
                     let mut ps: f32 = phase;
-                    ps %= 2.0*self.pi;
-                    ps /= 2.0*self.pi;
+                    ps %= 2.0*general::PI;
+                    ps /= 2.0*general::PI;
                     if ps < 0.1 { pls = 0.5;}
                     else if ps < 0.2 { pls = -0.5;}
                     abuf.set_abuf(i, pls);
@@ -126,9 +123,8 @@ impl Osc {
             }
         }
         //  Update next_phase
-        let mut phase = self.next_phase + delta_phase*(abuf.sample_number as f32);
-        while phase > 2.0*self.pi {
-            phase -= 2.0*self.pi;
+        while phase > 2.0*general::PI {
+            phase -= 2.0*general::PI;
         }
         self.next_phase = phase;
     }

@@ -18,3 +18,4 @@ pub mod msgf_afrm;
 pub const MAX_PART_NUM: usize = 1;
 pub const MAX_BUFFER_SIZE: usize = 1024;
 pub const SAMPLING_FREQ: f32 = 44100.0;
+pub const PI: f32 = std::f32::consts::PI;
