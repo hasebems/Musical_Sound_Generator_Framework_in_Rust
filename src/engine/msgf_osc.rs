@@ -78,13 +78,13 @@ impl Osc {
         ap
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_afrm::AudioFrame) {
-        let wavefn: fn(f32, usize) -> f32;
+        let wave_func: fn(f32, usize) -> f32;
         match self.wv_type {
             WvType::Sine => {
-                wavefn = |x, _y| x.sin();
+                wave_func = |x, _y| x.sin();
             }
             WvType::Saw => {
-                wavefn = |x, y| {
+                wave_func = |x, y| {
                     let mut saw: f32 = 0.0;
                     for j in 1..y {
                         let ot:f32 = j as f32;
@@ -94,7 +94,7 @@ impl Osc {
                 };
             }
             WvType::Square => {
-                wavefn = |x, y| {
+                wave_func = |x, y| {
                     let mut sq: f32 = 0.0;
                     for j in (1..y).step_by(2) {
                         let ot:f32 = j as f32;
@@ -104,7 +104,7 @@ impl Osc {
                 };
             }
             WvType::Pulse => {
-                wavefn = |x, _y| {
+                wave_func = |x, _y| {
                     let mut pls: f32 = 0.0;
                     let mut ps: f32 = x;
                     ps %= 2.0*general::PI;
@@ -119,7 +119,7 @@ impl Osc {
         let mut phase = self.next_phase;
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         for i in 0..abuf.sample_number {
-            abuf.set_abuf(i, wavefn(phase, max_overtone));
+            abuf.set_abuf(i, wave_func(phase, max_overtone));
             phase += (self.base_pitch*piconst) * (1.0 + lbuf.get_abuf(i));
         }
         //  Update next_phase
