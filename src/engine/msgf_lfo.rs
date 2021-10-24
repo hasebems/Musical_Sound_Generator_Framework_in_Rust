@@ -39,8 +39,8 @@ pub struct LfoParameter {
 //  Voice Parameter
 const LFO_PRM: LfoParameter = LfoParameter {
     freq: 5.0,
-    depth: 0.1,
-    wave: LfoWave::Saw,
+    depth: 0.02,
+    wave: LfoWave::Tri,
     direction: LfoDirection::LfoBoth,
 };
 //---------------------------------------------------------

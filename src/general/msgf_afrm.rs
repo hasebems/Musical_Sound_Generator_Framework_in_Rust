@@ -54,8 +54,7 @@ impl AudioFrame {
         self.abuf[num] *= rate;
     }
     pub fn get_abuf(&self, num: usize) -> f32 { self.abuf[num]}
-
-    pub fn get_max_level(&self) -> f32 {
+    pub fn _get_max_level(&self) -> f32 {
         let mut max_val: f32 = 0.0;
         for i in 0..self.sample_number {
             let val = self.abuf[i];
@@ -71,7 +70,6 @@ impl AudioFrame {
             self.add_abuf(i, val);
         }
     }
-
     pub fn mix_and_check_no_sound(&mut self, srcbuf: &AudioFrame) -> bool {
         let mut cnt: usize = 0;
         for i in 0..self.sample_number {

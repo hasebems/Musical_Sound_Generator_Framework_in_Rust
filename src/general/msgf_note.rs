@@ -77,10 +77,10 @@ impl Note {
         self.status = NoteStatus::DuringDamp;
         self.damp_counter = 0;
     }
-    fn manage_note_level(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
+    fn manage_note_level(&mut self, abuf: &mut msgf_afrm::AudioFrame, aegbuf: &mut msgf_cfrm::CtrlFrame) {
         if self.status != NoteStatus::DuringDamp {
             //	Check Level
-            let level = abuf.get_max_level();
+            let level = aegbuf.get_max_level();
             self.lvl_check_buf.put_abuf(level);
         } else {    //	Damp
             for snum in 0..abuf.sample_number {
@@ -106,14 +106,14 @@ impl Note {
         self.osc.process(abuf, lbuf);
 
         //  AEG
-        let aebuf = &mut msgf_cfrm::CtrlFrame::new(cbuf_size);
-        self.aeg.process(aebuf);
+        let aegbuf = &mut msgf_cfrm::CtrlFrame::new(cbuf_size);
+        self.aeg.process(aegbuf);
 
         //  Volume
         for i in 0..abuf.sample_number {
-            let aeg = aebuf.get_ctrl(i);
+            let aeg = aegbuf.get_ctrl(i);
             abuf.mul_abuf(i, self.max_note_vol*aeg);
         }
-        self.manage_note_level(abuf);
+        self.manage_note_level(abuf, aegbuf);
     }
 }
