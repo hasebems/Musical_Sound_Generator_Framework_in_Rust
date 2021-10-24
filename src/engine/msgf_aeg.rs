@@ -44,6 +44,7 @@ pub struct Aeg {
     crnt_value: f32,
     crnt_rate: f32,
     interpolate_value: f32,
+    release_rsv: bool,
 }
 
 impl Aeg {
@@ -55,6 +56,7 @@ impl Aeg {
             crnt_value: 0.0,
             crnt_rate: 1.0,
             interpolate_value: 0.0,
+            release_rsv: false,
         }
     }
     pub fn move_to_attack(&mut self) {
@@ -87,11 +89,17 @@ impl Aeg {
         }
     }
     pub fn move_to_release(&mut self) {
-        self.src_value = self.crnt_value;
-        self.tgt_value = 0.0;
-        self.crnt_rate = AEG_PRM.release_rate;
-        self.state = EgState::Release;
-        self.interpolate_value = 0.0;
+        if self.state == EgState::Decay {
+            //  Decay 中であれば、Decay が終わるまで release は保留
+            self.release_rsv = true;
+        }
+        else {
+            self.src_value = self.crnt_value;
+            self.tgt_value = 0.0;
+            self.crnt_rate = AEG_PRM.release_rate;
+            self.state = EgState::Release;
+            self.interpolate_value = 0.0;
+        }
     }
     fn move_to_egdone(&mut self) {
         self.src_value = 0.0;
@@ -127,7 +135,12 @@ impl Aeg {
                 EgState::Decay => {
                     eg_crnt = self.calc_delta_eg(eg_diff);
                     if eg_diff < 0.0 && self.tgt_value >= eg_crnt {
-                        self.move_to_sustain(self.tgt_value);
+                        if self.release_rsv {
+                            self.state = EgState::Sustain;
+                            self.move_to_release();
+                        } else {
+                            self.move_to_sustain(self.tgt_value);
+                        }
                     }
                 },
                 EgState::Release => {
