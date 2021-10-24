@@ -44,14 +44,26 @@ impl AudioFrame {
             self.index = 0;
         }
     }
+    fn limit_check(val1: f32, val2: f32) -> f32 {
+        let mut newval = val1 + val2;
+        if newval > 1.0 {
+            newval = 0.99;
+        } else if newval < -1.0 {
+            newval = -0.99;
+        };
+        newval
+    }
     pub fn set_abuf(&mut self, num: usize, val: f32) {
-        self.abuf[num] = val;
+        let newval = Self::limit_check(val, 0.0);
+        self.abuf[num] = newval;
     }
     pub fn add_abuf(&mut self, num: usize, val: f32) {
-        self.abuf[num] += val;
+        let newval = Self::limit_check(self.abuf[num], val);
+        self.abuf[num] = newval;
     }
     pub fn mul_abuf(&mut self, num: usize, rate: f32) {
-        self.abuf[num] *= rate;
+        let newval = Self::limit_check(self.abuf[num]*rate, 0.0);
+        self.abuf[num] = newval;
     }
     pub fn get_abuf(&self, num: usize) -> f32 { self.abuf[num]}
     pub fn _get_max_level(&self) -> f32 {

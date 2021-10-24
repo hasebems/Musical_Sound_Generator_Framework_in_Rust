@@ -111,7 +111,7 @@ impl Note {
 
         //  Volume
         for i in 0..abuf.sample_number {
-            let aeg = aegbuf.get_ctrl(i);
+            let aeg = aegbuf.ctrl_for_audio(i);
             abuf.mul_abuf(i, self.max_note_vol*aeg);
         }
         self.manage_note_level(abuf, aegbuf);

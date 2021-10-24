@@ -120,7 +120,7 @@ impl Osc {
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         for i in 0..abuf.sample_number {
             abuf.set_abuf(i, wave_func(phase, max_overtone));
-            phase += (self.base_pitch*piconst)*(1.0 + lbuf.get_ctrl(i));
+            phase += (self.base_pitch*piconst)*(1.0 + lbuf.ctrl_for_audio(i));
         }
         //  Update next_phase
         while phase > 2.0*general::PI {

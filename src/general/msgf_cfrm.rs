@@ -38,7 +38,7 @@ impl CtrlFrame {
         self.cbuf[num] *= rate;
     }
     pub fn _get_cbuf(&self, num: usize) -> f32 { self.cbuf[num]}
-    pub fn get_ctrl(&self, num: usize) -> f32 { // for Audio Buffer
+    pub fn ctrl_for_audio(&self, num: usize) -> f32 { // for Audio Buffer
         self.cbuf[num/general::AUDIO_FRAME_PER_CONTROL]
     }
     pub fn get_max_level(&self) -> f32 {
