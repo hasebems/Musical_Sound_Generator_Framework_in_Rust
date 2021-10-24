@@ -9,7 +9,7 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::general;
-use crate::general::msgf_afrm;
+use crate::general::msgf_cfrm;
 
 #[derive(PartialEq, Clone, Copy)]
 #[allow(dead_code)]
@@ -62,7 +62,7 @@ impl Lfo {
         Lfo {
             depth: LFO_PRM.depth,
             next_phase: 0.0,
-            delta_phase: LFO_PRM.freq/general::SAMPLING_FREQ,
+            delta_phase: (LFO_PRM.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
             direction: LFO_PRM.direction,
             x1: coef.0,
             x2: coef.1,
@@ -81,7 +81,7 @@ impl Lfo {
         };
         (x1, x2, y, z)
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
+    pub fn process(&mut self, abuf: &mut msgf_cfrm::CtrlFrame) {
         let mut phase = self.next_phase;
         for i in 0..abuf.sample_number {
             let mut value = phase;
@@ -123,7 +123,7 @@ impl Lfo {
             }
             value = value*lvl + ofs;
     
-            abuf.set_abuf(i, value*self.depth);
+            abuf.set_cbuf(i, value*self.depth);
             self.dac_counter += 1;
         }
         while phase > 2.0*general::PI {

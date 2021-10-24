@@ -11,6 +11,7 @@ pub mod msgf_part;
 pub mod msgf_inst;
 pub mod msgf_note;
 pub mod msgf_afrm;
+pub mod msgf_cfrm;
 //---------------------------------------------------------
 //		Constants
 //---------------------------------------------------------
@@ -19,3 +20,4 @@ pub const MAX_PART_NUM: usize = 1;
 pub const MAX_BUFFER_SIZE: usize = 1024;
 pub const SAMPLING_FREQ: f32 = 44100.0;
 pub const PI: f32 = std::f32::consts::PI;
+pub const AUDIO_FRAME_PER_CONTROL: usize = 128;

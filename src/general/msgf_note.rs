@@ -10,6 +10,7 @@
 //
 use crate::general;
 use crate::general::msgf_afrm;
+use crate::general::msgf_cfrm;
 use crate::engine::msgf_aeg;
 use crate::engine::msgf_osc;
 use crate::engine::msgf_lfo;
@@ -95,7 +96,8 @@ impl Note {
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, in_number_frames: usize) {
         //  LFO
-        let lbuf = &mut msgf_afrm::AudioFrame::new(in_number_frames);
+        let cbuf_size = msgf_cfrm::CtrlFrame::get_cbuf_size(in_number_frames);
+        let lbuf = &mut msgf_cfrm::CtrlFrame::new(cbuf_size);
         self.lfo.process(lbuf);
 
         //  Oscillator

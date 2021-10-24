@@ -10,6 +10,7 @@
 //
 use crate::general;
 use crate::general::msgf_afrm;
+use crate::general::msgf_cfrm;
 
 #[allow(dead_code)]
 #[derive(PartialEq)]
@@ -73,11 +74,10 @@ impl Osc {
         for _ in 0..solfa_name {
             ap *= ratio;
         }
-        let cratio = (OSC_PRM.fine_tune*(2_f32.ln()/1200_f32)).exp();
-        ap *= cratio;
+        ap *= (OSC_PRM.fine_tune*(2_f32.ln()/1200_f32)).exp();
         ap
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_afrm::AudioFrame) {
+    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {
         let wave_func: fn(f32, usize) -> f32;
         match self.wv_type {
             WvType::Sine => {
@@ -120,7 +120,7 @@ impl Osc {
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         for i in 0..abuf.sample_number {
             abuf.set_abuf(i, wave_func(phase, max_overtone));
-            phase += (self.base_pitch*piconst) * (1.0 + lbuf.get_abuf(i));
+            phase += (self.base_pitch*piconst)*(1.0 + lbuf.get_ctrl(i));
         }
         //  Update next_phase
         while phase > 2.0*general::PI {
