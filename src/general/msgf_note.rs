@@ -95,20 +95,24 @@ impl Note {
         }
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, in_number_frames: usize) {
-        //  LFO
+        //  Pitch Control
         let cbuf_size = msgf_cfrm::CtrlFrame::get_cbuf_size(in_number_frames);
         let lbuf = &mut msgf_cfrm::CtrlFrame::new(cbuf_size);
+
+        //  LFO
         self.lfo.process(lbuf);
 
         //  Oscillator
         self.osc.process(abuf, lbuf);
 
         //  AEG
-        self.aeg.process(abuf);
+        let aebuf = &mut msgf_cfrm::CtrlFrame::new(cbuf_size);
+        self.aeg.process(aebuf);
 
         //  Volume
         for i in 0..abuf.sample_number {
-            abuf.mul_abuf(i, self.max_note_vol);
+            let aeg = aebuf.get_ctrl(i);
+            abuf.mul_abuf(i, self.max_note_vol*aeg);
         }
         self.manage_note_level(abuf);
     }
