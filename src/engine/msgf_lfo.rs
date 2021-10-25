@@ -10,7 +10,11 @@
 //
 use crate::general;
 use crate::general::msgf_cfrm;
+use crate::app::msgf_prm;
 
+//---------------------------------------------------------
+//		Synth. Parameter
+//---------------------------------------------------------
 #[derive(PartialEq, Clone, Copy)]
 #[allow(dead_code)]
 pub enum LfoDirection {
@@ -26,23 +30,12 @@ pub enum LfoWave {
     Squ,
     Sin,
 }
-
-//---------------------------------------------------------
-//		Synth. Parameter
-//---------------------------------------------------------
 pub struct LfoParameter {
-    freq: f32,
-    depth: f32,
-    wave: LfoWave,
-    direction: LfoDirection,
+    pub freq: f32,
+    pub depth: f32,
+    pub wave: LfoWave,
+    pub direction: LfoDirection,
 }
-//  Voice Parameter
-const LFO_PRM: LfoParameter = LfoParameter {
-    freq: 5.0,
-    depth: 0.02,
-    wave: LfoWave::Tri,
-    direction: LfoDirection::LfoBoth,
-};
 //---------------------------------------------------------
 pub struct Lfo {
     depth: f32,
@@ -55,15 +48,15 @@ pub struct Lfo {
     z: f32,
     dac_counter: u64,
 }
-
+//---------------------------------------------------------
 impl Lfo {
     pub fn new() -> Lfo {
-        let coef = Lfo::set_lfo(LFO_PRM.wave, LFO_PRM.direction);
+        let coef = Lfo::set_lfo(msgf_prm::INST1.lfo.wave, msgf_prm::INST1.lfo.direction);
         Lfo {
-            depth: LFO_PRM.depth,
+            depth: msgf_prm::INST1.lfo.depth,
             next_phase: 0.0,
-            delta_phase: (LFO_PRM.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
-            direction: LFO_PRM.direction,
+            delta_phase: (msgf_prm::INST1.lfo.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
+            direction: msgf_prm::INST1.lfo.direction,
             x1: coef.0,
             x2: coef.1,
             y: coef.2,

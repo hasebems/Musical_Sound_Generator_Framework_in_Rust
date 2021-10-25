@@ -9,7 +9,11 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::general::msgf_cfrm;
+use crate::app::msgf_prm;
 
+//---------------------------------------------------------
+//		Synth. Parameter
+//---------------------------------------------------------
 #[derive(PartialEq, Clone, Copy)]
 pub enum EgState {
     NotYet,
@@ -20,22 +24,13 @@ pub enum EgState {
     EgDone,
     _Damp,
 }
-//---------------------------------------------------------
-//		Synth. Parameter
-//---------------------------------------------------------
 pub struct AegParameter {
-    attack_rate: f32,
-    decay_rate: f32,
-    sustain_level: f32,
-    release_rate: f32,
+    pub attack_rate: f32,
+    pub decay_rate: f32,
+    pub sustain_level: f32,
+    pub release_rate: f32,
 }
-//  Voice Parameter
-const AEG_PRM: AegParameter = AegParameter {
-    attack_rate: 0.5,  //  0.0-1.0
-    decay_rate: 0.01, //  0.0-1.0 : 1.0 means no decay and no sustain level
-    sustain_level: 0.1, //  1 means same value as Attack Level
-    release_rate: 0.01, //  0.0-1.0
-};
+
 //---------------------------------------------------------
 pub struct Aeg {
     state: EgState,
@@ -46,7 +41,7 @@ pub struct Aeg {
     interpolate_value: f32,
     release_rsv: bool,
 }
-
+//---------------------------------------------------------
 impl Aeg {
     pub fn new() -> Aeg {
         Aeg {
@@ -62,27 +57,27 @@ impl Aeg {
     pub fn move_to_attack(&mut self) {
         self.src_value = 0.0;
         self.tgt_value = 1.0;
-        self.crnt_rate = AEG_PRM.attack_rate;
+        self.crnt_rate = msgf_prm::INST1.aeg.attack_rate;
         self.state = EgState::Attack;
         self.interpolate_value = 0.0;
     }
     fn move_to_decay(&mut self, eg_crnt: f32) {
-        if AEG_PRM.decay_rate == 1.0 {
+        if msgf_prm::INST1.aeg.decay_rate == 1.0 {
             self.move_to_sustain(eg_crnt);
         } else {
             self.src_value = eg_crnt;
-            self.tgt_value = AEG_PRM.sustain_level;
-            self.crnt_rate = AEG_PRM.decay_rate;
+            self.tgt_value = msgf_prm::INST1.aeg.sustain_level;
+            self.crnt_rate = msgf_prm::INST1.aeg.decay_rate;
             self.state = EgState::Decay;
             self.interpolate_value = 0.0;
         }
     }
     fn move_to_sustain(&mut self, eg_crnt: f32) {
-        if AEG_PRM.sustain_level == 0.0 {
+        if msgf_prm::INST1.aeg.sustain_level == 0.0 {
             self.move_to_egdone();
         } else {
             self.src_value = eg_crnt;
-            self.tgt_value = AEG_PRM.sustain_level;
+            self.tgt_value = msgf_prm::INST1.aeg.sustain_level;
             self.crnt_rate = 0.0;
             self.state = EgState::Sustain;
             self.interpolate_value = 0.0;
@@ -96,7 +91,7 @@ impl Aeg {
         else {
             self.src_value = self.crnt_value;
             self.tgt_value = 0.0;
-            self.crnt_rate = AEG_PRM.release_rate;
+            self.crnt_rate = msgf_prm::INST1.aeg.release_rate;
             self.state = EgState::Release;
             self.interpolate_value = 0.0;
         }
