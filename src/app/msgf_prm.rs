@@ -21,7 +21,8 @@ pub struct SynthParameter {
     pub lfo: LfoParameter,
 }
 
-pub const INST1: SynthParameter = SynthParameter {
+pub const TONE_PRM: [SynthParameter; 3] = [
+SynthParameter {
     osc: OscParameter {
         coarse_tune: 0,     //  i32
         fine_tune: 0.0,   //  f32
@@ -39,4 +40,43 @@ pub const INST1: SynthParameter = SynthParameter {
         wave: LfoWave::Tri,
         direction: LfoDirection::LfoBoth,
     },
-};
+},
+SynthParameter {
+    osc: OscParameter {
+        coarse_tune: 0,     //  i32
+        fine_tune: 0.0,   //  f32
+        wv_type: WvType::Sine,
+    },
+    aeg: AegParameter {
+        attack_rate: 0.5,  //  0.0-1.0
+        decay_rate: 0.01, //  0.0-1.0 : 1.0 means no decay and no sustain level
+        sustain_level: 0.1, //  1 means same value as Attack Level
+        release_rate: 0.01, //  0.0-1.0
+    },
+    lfo: LfoParameter {
+        freq: 5.0,
+        depth: 0.02,
+        wave: LfoWave::Tri,
+        direction: LfoDirection::LfoBoth,
+    },
+},
+SynthParameter {
+    osc: OscParameter {
+        coarse_tune: 0,     //  i32
+        fine_tune: 0.0,   //  f32
+        wv_type: WvType::Sine,
+    },
+    aeg: AegParameter {
+        attack_rate: 0.5,  //  0.0-1.0
+        decay_rate: 0.01, //  0.0-1.0 : 1.0 means no decay and no sustain level
+        sustain_level: 0.1, //  1 means same value as Attack Level
+        release_rate: 0.01, //  0.0-1.0
+    },
+    lfo: LfoParameter {
+        freq: 5.0,
+        depth: 0.02,
+        wave: LfoWave::Tri,
+        direction: LfoDirection::LfoBoth,
+    },
+},
+];

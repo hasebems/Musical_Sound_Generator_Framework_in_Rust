@@ -51,12 +51,12 @@ pub struct Lfo {
 //---------------------------------------------------------
 impl Lfo {
     pub fn new() -> Lfo {
-        let coef = Lfo::set_lfo(msgf_prm::INST1.lfo.wave, msgf_prm::INST1.lfo.direction);
+        let coef = Lfo::set_lfo(msgf_prm::TONE_PRM[0].lfo.wave, msgf_prm::TONE_PRM[0].lfo.direction);
         Lfo {
-            depth: msgf_prm::INST1.lfo.depth,
+            depth: msgf_prm::TONE_PRM[0].lfo.depth,
             next_phase: 0.0,
-            delta_phase: (msgf_prm::INST1.lfo.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
-            direction: msgf_prm::INST1.lfo.direction,
+            delta_phase: (msgf_prm::TONE_PRM[0].lfo.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
+            direction: msgf_prm::TONE_PRM[0].lfo.direction,
             x1: coef.0,
             x2: coef.1,
             y: coef.2,
