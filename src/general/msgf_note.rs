@@ -50,16 +50,16 @@ impl PartialEq for Note {
 }
 
 impl Note {
-    pub fn new(note: u8, vel: u8) -> Note {
+    pub fn new(note: u8, vel: u8, inst_set: usize) -> Note {
         Self {
             note,
             vel,
             status: NoteStatus::DuringNoteOn,
             damp_counter: 0,
             lvl_check_buf: msgf_afrm::AudioFrame::new((general::SAMPLING_FREQ/100.0) as usize),
-            osc: msgf_osc::Osc::new(note),
-            aeg: msgf_aeg::Aeg::new(),
-            lfo: msgf_lfo::Lfo::new(),
+            osc: msgf_osc::Osc::new(note, inst_set),
+            aeg: msgf_aeg::Aeg::new(inst_set),
+            lfo: msgf_lfo::Lfo::new(inst_set),
             max_note_vol: 0.5f32.powf(4.0), // 4bit margin
         }
     }

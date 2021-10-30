@@ -46,11 +46,11 @@ pub struct Osc {
 }
 //---------------------------------------------------------
 impl Osc {
-    pub fn new(note:u8) -> Osc {
+    pub fn new(note:u8, inst_set:usize) -> Osc {
         Osc {
-            base_pitch: Osc::calc_pitch(note),
+            base_pitch: Osc::calc_pitch(note, inst_set),
             next_phase: 0.0,
-            wv_type: msgf_prm::TONE_PRM[0].osc.wv_type,
+            wv_type: msgf_prm::TONE_PRM[inst_set].osc.wv_type,
         }
     }
     fn limit_note(calculated_note:i32) -> u8 {
@@ -59,8 +59,8 @@ impl Osc {
         while note >= 128 { note -= 12;}
         note as u8
     }
-    fn calc_pitch(note:u8) -> f32 {
-        let tune_note: u8 = Osc::limit_note(note as i32 + msgf_prm::TONE_PRM[0].osc.coarse_tune);
+    fn calc_pitch(note:u8, inst_set:usize) -> f32 {
+        let tune_note: u8 = Osc::limit_note(note as i32 + msgf_prm::TONE_PRM[inst_set].osc.coarse_tune);
         let solfa_name: u8 = (tune_note + 3)%12;
         let octave: usize = ((tune_note as usize) + 3)/12;
         let mut ap = PITCH_OF_A[octave];
@@ -68,7 +68,7 @@ impl Osc {
         for _ in 0..solfa_name {
             ap *= ratio;
         }
-        ap *= (msgf_prm::TONE_PRM[0].osc.fine_tune*(2_f32.ln()/1200_f32)).exp();
+        ap *= (msgf_prm::TONE_PRM[inst_set].osc.fine_tune*(2_f32.ln()/1200_f32)).exp();
         ap
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {

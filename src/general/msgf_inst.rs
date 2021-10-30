@@ -11,18 +11,25 @@
 use crate::general::msgf_afrm;
 use crate::general::msgf_note;
 use crate::general::msgf_note::NoteStatus;
+use crate::app::msgf_prm;
 
 //---------------------------------------------------------
 //		Class
 //---------------------------------------------------------
 pub struct Inst {
     ntvec: Vec<msgf_note::Note>,
+    inst_number: usize,
 }
 
 impl Inst {
-    pub fn new() -> Self {
+    pub fn new(mut inst_number: usize) -> Self {
+        let max_tone = msgf_prm::MAX_TONE_COUNT;
+        if inst_number >= max_tone {
+            inst_number = max_tone-1;
+        }
         Self {
             ntvec: Vec::new(),
+            inst_number,
         }
     }
     pub fn note_off(&mut self, dt2: u8, _dt3: u8) {
@@ -32,7 +39,7 @@ impl Inst {
         }
     }
     pub fn note_on(&mut self, dt2: u8, dt3: u8) {
-        let mut new_note: msgf_note::Note = msgf_note::Note::new(dt2, dt3);
+        let mut new_note: msgf_note::Note = msgf_note::Note::new(dt2, dt3, self.inst_number);
         new_note.start_sound();
         self.ntvec.push(new_note);
     }

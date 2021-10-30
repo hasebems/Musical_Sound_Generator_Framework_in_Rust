@@ -33,6 +33,7 @@ pub struct AegParameter {
 
 //---------------------------------------------------------
 pub struct Aeg {
+    inst_set: usize,
     state: EgState,
     tgt_value: f32,
     src_value: f32,
@@ -43,8 +44,9 @@ pub struct Aeg {
 }
 //---------------------------------------------------------
 impl Aeg {
-    pub fn new() -> Aeg {
+    pub fn new(inst_set:usize) -> Aeg {
         Aeg {
+            inst_set,
             state: EgState::NotYet,
             tgt_value: 0.0,
             src_value: 0.0,
@@ -57,27 +59,27 @@ impl Aeg {
     pub fn move_to_attack(&mut self) {
         self.src_value = 0.0;
         self.tgt_value = 1.0;
-        self.crnt_rate = msgf_prm::TONE_PRM[0].aeg.attack_rate;
+        self.crnt_rate = msgf_prm::TONE_PRM[self.inst_set].aeg.attack_rate;
         self.state = EgState::Attack;
         self.interpolate_value = 0.0;
     }
     fn move_to_decay(&mut self, eg_crnt: f32) {
-        if msgf_prm::TONE_PRM[0].aeg.decay_rate == 1.0 {
+        if msgf_prm::TONE_PRM[self.inst_set].aeg.decay_rate == 1.0 {
             self.move_to_sustain(eg_crnt);
         } else {
             self.src_value = eg_crnt;
-            self.tgt_value = msgf_prm::TONE_PRM[0].aeg.sustain_level;
-            self.crnt_rate = msgf_prm::TONE_PRM[0].aeg.decay_rate;
+            self.tgt_value = msgf_prm::TONE_PRM[self.inst_set].aeg.sustain_level;
+            self.crnt_rate = msgf_prm::TONE_PRM[self.inst_set].aeg.decay_rate;
             self.state = EgState::Decay;
             self.interpolate_value = 0.0;
         }
     }
     fn move_to_sustain(&mut self, eg_crnt: f32) {
-        if msgf_prm::TONE_PRM[0].aeg.sustain_level == 0.0 {
+        if msgf_prm::TONE_PRM[self.inst_set].aeg.sustain_level == 0.0 {
             self.move_to_egdone();
         } else {
             self.src_value = eg_crnt;
-            self.tgt_value = msgf_prm::TONE_PRM[0].aeg.sustain_level;
+            self.tgt_value = msgf_prm::TONE_PRM[self.inst_set].aeg.sustain_level;
             self.crnt_rate = 0.0;
             self.state = EgState::Sustain;
             self.interpolate_value = 0.0;
@@ -91,7 +93,7 @@ impl Aeg {
         else {
             self.src_value = self.crnt_value;
             self.tgt_value = 0.0;
-            self.crnt_rate = msgf_prm::TONE_PRM[0].aeg.release_rate;
+            self.crnt_rate = msgf_prm::TONE_PRM[self.inst_set].aeg.release_rate;
             self.state = EgState::Release;
             self.interpolate_value = 0.0;
         }
