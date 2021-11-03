@@ -35,6 +35,8 @@ pub struct LfoParameter {
     pub depth: f32,
     pub wave: LfoWave,
     pub direction: LfoDirection,
+    pub fadein_time: u64,
+    pub delay_time: u64,
 }
 //---------------------------------------------------------
 pub struct Lfo {
@@ -47,21 +49,24 @@ pub struct Lfo {
     y: f32,
     z: f32,
     dac_counter: u64,
+    prm: &'static LfoParameter,
 }
 //---------------------------------------------------------
 impl Lfo {
     pub fn new(inst_set:usize) -> Lfo {
-        let coef = Lfo::set_lfo(msgf_prm::TONE_PRM[inst_set].lfo.wave, msgf_prm::TONE_PRM[0].lfo.direction);
+        let lfo_prm = &msgf_prm::TONE_PRM[inst_set].lfo;
+        let coef = Lfo::set_lfo(lfo_prm.wave, lfo_prm.direction);
         Lfo {
-            depth: msgf_prm::TONE_PRM[inst_set].lfo.depth,
+            depth: lfo_prm.depth,
             next_phase: 0.0,
-            delta_phase: (msgf_prm::TONE_PRM[inst_set].lfo.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
-            direction: msgf_prm::TONE_PRM[inst_set].lfo.direction,
+            delta_phase: (lfo_prm.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
+            direction: lfo_prm.direction,
             x1: coef.0,
             x2: coef.1,
             y: coef.2,
             z: coef.3,
             dac_counter: 0,
+            prm: lfo_prm,
         }
     }
     fn set_lfo(wv: LfoWave, _dir: LfoDirection) -> (f32, f32, f32, f32) {
@@ -73,6 +78,9 @@ impl Lfo {
             LfoWave::Sin => {x1=0.5; x2=1.5; y=2.0*general::PI; z=1.0/6.78;}
         };
         (x1, x2, y, z)
+    }
+    pub fn start(&mut self) {
+        self.dac_counter = 0;
     }
     pub fn process(&mut self, abuf: &mut msgf_cfrm::CtrlFrame) {
         let mut phase = self.next_phase;
@@ -101,10 +109,12 @@ impl Lfo {
             //	Fadein, Delay
             let mut lvl = 1.0;
             let mut ofs = 0.0;
-            //if ( _dacCounter < _fadeInDacCount ) lvl = 0;
-            //else if ( _dacCounter < _fadeInDacCount+_delayDacCount ){
-            //    lvl = (_dacCounter-_fadeInDacCount)/_delayDacCount;
-            //}
+            if self.dac_counter < self.prm.fadein_time {
+                lvl = 0.0;
+            } else if self.dac_counter < self.prm.fadein_time+self.prm.delay_time {
+                let tm = (self.dac_counter-self.prm.fadein_time) as f32;
+                lvl = tm/(self.prm.delay_time as f32);
+            }
         
             //	Direction
             if self.direction == LfoDirection::LfoUpper {

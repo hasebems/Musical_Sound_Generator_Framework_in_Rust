@@ -65,6 +65,7 @@ impl Note {
     }
     pub fn start_sound(&mut self) {
         self.aeg.move_to_attack();
+        self.lfo.start();
     }
     pub fn note_off(&mut self) {
         self.status = NoteStatus::AfterNoteOff;
