@@ -8,12 +8,9 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
-use crate::engine::msgf_osc::OscParameter;
-use crate::engine::msgf_osc::WvType;
-use crate::engine::msgf_aeg::AegParameter;
-use crate::engine::msgf_lfo::LfoParameter;
-use crate::engine::msgf_lfo::LfoWave;
-use crate::engine::msgf_lfo::LfoDirection;
+use crate::engine::msgf_osc::*;
+use crate::engine::msgf_aeg::*;
+use crate::engine::msgf_lfo::*;
 
 pub struct SynthParameter {
     pub osc: OscParameter,

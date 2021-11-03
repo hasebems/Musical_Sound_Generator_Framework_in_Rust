@@ -9,9 +9,8 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::general;
-use crate::general::msgf_afrm;
-use crate::general::msgf_cfrm;
-use crate::app::msgf_prm;
+use crate::general::*;
+use crate::app::*;
 
 //---------------------------------------------------------
 //		Synth. Parameter

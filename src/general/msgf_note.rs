@@ -9,11 +9,8 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::general;
-use crate::general::msgf_afrm;
-use crate::general::msgf_cfrm;
-use crate::engine::msgf_aeg;
-use crate::engine::msgf_osc;
-use crate::engine::msgf_lfo;
+use crate::general::*;
+use crate::engine::*;
 
 //---------------------------------------------------------
 //		Constants

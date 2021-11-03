@@ -9,8 +9,7 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::general;
-use crate::general::msgf_part;
-use crate::general::msgf_afrm;
+use crate::general::*;
 
 //---------------------------------------------------------
 //		Class
