@@ -16,6 +16,10 @@
 
 #define SAMPLING_FREQ 44100.0
 
+#define AUDIO_FRAME_PER_CONTROL 128
+
+#define MAX_TONE_COUNT 3
+
 typedef struct Msgf Msgf;
 
 struct Msgf *rust_msgf_new(void);
@@ -23,7 +27,8 @@ struct Msgf *rust_msgf_new(void);
 void rust_recieve_midi_message(struct Msgf *rust_msgf, uint8_t dt1, uint8_t dt2, uint8_t dt3);
 
 void rust_process(struct Msgf *rust_msgf,
-                  float (*abuf)[MAX_BUFFER_SIZE],
+                  float (*abuf_l)[MAX_BUFFER_SIZE],
+                  float (*abuf_r)[MAX_BUFFER_SIZE],
                   uint32_t in_number_frames);
 
 void say_hello(void);

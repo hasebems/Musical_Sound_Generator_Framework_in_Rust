@@ -53,7 +53,10 @@ impl Msgf {
             _ => {}
         };
     }
-    pub fn process(&mut self, abuf: &mut [f32; general::MAX_BUFFER_SIZE], in_number_frames: u32) {
+    pub fn process(&mut self,
+        abuf_l: &mut [f32; general::MAX_BUFFER_SIZE],
+        abuf_r: &mut [f32; general::MAX_BUFFER_SIZE],
+        in_number_frames: u32) {
         if self.in_number_frames != in_number_frames {
             println!("Audio Buffer: {}",in_number_frames);
             self.in_number_frames = in_number_frames;
@@ -62,6 +65,7 @@ impl Msgf {
         for i in 0..general::MAX_PART_NUM {
             &self.part[i].process(audio_buffer, in_number_frames as usize);
         };
-        audio_buffer.copy_from_abuf(abuf);
+        audio_buffer.copy_from_abuf(abuf_l);  // L
+        audio_buffer.copy_from_abuf(abuf_r);  // R
     }
 }
