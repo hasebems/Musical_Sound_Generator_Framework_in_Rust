@@ -100,7 +100,14 @@ impl Part {
     pub fn pitch_bend(&mut self, bend: i16) {
         self.pitch_bend_value = bend;
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, in_number_frames: usize) {
-        self.inst.process(abuf, in_number_frames);
+    pub fn process(&mut self,
+                   abuf_l: &mut msgf_afrm::AudioFrame,
+                   abuf_r: &mut msgf_afrm::AudioFrame,
+                   in_number_frames: usize) {
+        let inst_audio_buffer = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
+        self.inst.process(inst_audio_buffer, in_number_frames);
+        // Part Volume, Part Pan, Effect 
+        inst_audio_buffer.copy_to_abuf(abuf_l);
+        inst_audio_buffer.copy_to_abuf(abuf_r);
     }
 }

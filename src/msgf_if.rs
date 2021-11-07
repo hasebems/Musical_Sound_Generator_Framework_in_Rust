@@ -61,11 +61,12 @@ impl Msgf {
             println!("Audio Buffer: {}",in_number_frames);
             self.in_number_frames = in_number_frames;
         }
-        let audio_buffer = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
+        let audio_buffer_l = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
+        let audio_buffer_r = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
         for i in 0..general::MAX_PART_NUM {
-            &self.part[i].process(audio_buffer, in_number_frames as usize);
+            &self.part[i].process(audio_buffer_l, audio_buffer_r, in_number_frames as usize);
         };
-        audio_buffer.copy_from_abuf(abuf_l);  // L
-        audio_buffer.copy_from_abuf(abuf_r);  // R
+        audio_buffer_l.copy_to_sysbuf(abuf_l);  // L
+        audio_buffer_r.copy_to_sysbuf(abuf_r);  // R
     }
 }
