@@ -9,8 +9,8 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 //  How to generate msgf.h
-//      cbindgen --config cbindgen.toml --crate msgf --output msgf.h --lang=c
-//
+//      cbindgen --config cbindgen.toml --crate msgf --output msgf.h --lang=c -q
+//      (-q: Report errors only )
 mod msgf_if;
 mod general;
 mod engine;
