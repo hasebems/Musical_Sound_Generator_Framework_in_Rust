@@ -22,36 +22,36 @@ pub const MAX_TONE_COUNT:usize = 3;
 pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
     SynthParameter {
         osc: OscParameter {
-            coarse_tune: 0,     //  i32
-            fine_tune: 0.0,   //  f32
+            coarse_tune: 0,     //  i32 : 0 means tuning of A=440[Hz]
+            fine_tune: 0.0,     //  f32 : 1.0 means 1[cent]
             wv_type: WvType::Sine,
         },
         aeg: AegParameter {
-            attack_rate: 0.5,  //  0.0-1.0
-            decay_rate: 0.01, //  0.0-1.0 : 1.0 means no decay and no sustain level
+            attack_rate: 0.5,   //  0.0-1.0
+            decay_rate: 0.01,   //  0.0-1.0 : 1.0 means no decay and no sustain level
             sustain_level: 0.1, //  1 means same value as Attack Level
             release_rate: 0.01, //  0.0-1.0
         },
         lfo: LfoParameter {
-            freq: 5.0,
+            freq: 5.0,          //  [Hz]
             depth: 0.02,
             wave: LfoWave::Tri,
             direction: LfoDirection::LfoBoth,
-            fadein_time: 0, //  1: AUDIO_FRAME_PER_CONTROL / SAMPLING_FREQ
-            delay_time: 0,
+            fadein_time: 0,     //  1: AUDIO_FRAME_PER_CONTROL / SAMPLING_FREQ (=3msec)
+            delay_time: 0,      //    same as above
         },
     },
     SynthParameter {
         osc: OscParameter {
-            coarse_tune: 0,     //  i32
-            fine_tune: 0.0,   //  f32
+            coarse_tune: 0,
+            fine_tune: 0.0,
             wv_type: WvType::Saw,
         },
         aeg: AegParameter {
-            attack_rate: 0.9,  //  0.0-1.0
-            decay_rate: 1.0, //  0.0-1.0 : 1.0 means no decay and no sustain level
-            sustain_level: 1.0, //  1 means same value as Attack Level
-            release_rate: 0.2, //  0.0-1.0
+            attack_rate: 0.9,
+            decay_rate: 1.0,
+            sustain_level: 1.0,
+            release_rate: 0.2,
         },
         lfo: LfoParameter {
             freq: 5.0,
@@ -64,15 +64,15 @@ pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
     },
     SynthParameter {
         osc: OscParameter {
-            coarse_tune: 0,     //  i32
-            fine_tune: 0.0,   //  f32
+            coarse_tune: 0,
+            fine_tune: 0.0,
             wv_type: WvType::Square,
         },
         aeg: AegParameter {
-            attack_rate: 0.5,  //  0.0-1.0
-            decay_rate: 0.01, //  0.0-1.0 : 1.0 means no decay and no sustain level
-            sustain_level: 0.5, //  1 means same value as Attack Level
-            release_rate: 0.1, //  0.0-1.0
+            attack_rate: 0.5,
+            decay_rate: 0.01,
+            sustain_level: 0.5,
+            release_rate: 0.1,
         },
         lfo: LfoParameter {
             freq: 5.0,
