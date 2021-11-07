@@ -1,7 +1,7 @@
 //
-//  msgf_note.rs
+//  msgf_voice.rs
 //	Musical Sound Generator Framework
-//      Note Class
+//      Voice Class
 //
 //  Created by Hasebe Masahiko on 2021/09/18.
 //  Copyright (c) 2021 Hasebe Masahiko.
@@ -21,10 +21,12 @@ pub enum NoteStatus {
     AfterNoteOff,
     DuringDamp,
 }
+const DAMP_RATE: u32 = 400;		// * dac time(22.68usec)
+
 //---------------------------------------------------------
 //		Class
 //---------------------------------------------------------
-pub struct Note {
+pub struct Voice {
     // Note
     note: u8,
     vel: u8,
@@ -38,16 +40,14 @@ pub struct Note {
     max_note_vol: f32,
 }
 
-const DAMP_RATE: u32 = 400;		// * dac time(22.68usec)
-
-impl PartialEq for Note {
+impl PartialEq for Voice {
     fn eq(&self, other: &Self) -> bool {
         self.note == other.note && self.vel == other.vel
     }
 }
 
-impl Note {
-    pub fn new(note: u8, vel: u8, inst_set: usize) -> Note {
+impl Voice {
+    pub fn new(note: u8, vel: u8, inst_set: usize) -> Voice {
         Self {
             note,
             vel,

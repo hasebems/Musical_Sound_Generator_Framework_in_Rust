@@ -9,14 +9,14 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::general::*;
-use crate::general::msgf_note::NoteStatus;
+use crate::general::msgf_voice::NoteStatus;
 use crate::app::msgf_prm;
 
 //---------------------------------------------------------
 //		Class
 //---------------------------------------------------------
 pub struct Inst {
-    ntvec: Vec<msgf_note::Note>,
+    ntvec: Vec<msgf_voice::Voice>,
     inst_number: usize,
 }
 
@@ -38,9 +38,9 @@ impl Inst {
         }
     }
     pub fn note_on(&mut self, dt2: u8, dt3: u8) {
-        let mut new_note: msgf_note::Note = msgf_note::Note::new(dt2, dt3, self.inst_number);
-        new_note.start_sound();
-        self.ntvec.push(new_note);
+        let mut new_voice: msgf_voice::Voice = msgf_voice::Voice::new(dt2, dt3, self.inst_number);
+        new_voice.start_sound();
+        self.ntvec.push(new_voice);
     }
     pub fn expression(&mut self, _value: u8) {}
     pub fn sustain(&mut self, _value: u8) {}
@@ -49,7 +49,7 @@ impl Inst {
             ntobj.damp();
         }
     }
-    pub fn _release_note(&mut self, nt: &msgf_note::Note){
+    pub fn _release_note(&mut self, nt: &msgf_voice::Voice){
         let ntcmp = self.ntvec.iter_mut();
         for (i, ntobj) in ntcmp.enumerate() {
             if ntobj == nt {
@@ -77,7 +77,7 @@ impl Inst {
             }
         }
     }
-    fn search_note(&mut self, note_num: u8, sts: NoteStatus) -> Option<&mut msgf_note::Note> {
+    fn search_note(&mut self, note_num: u8, sts: NoteStatus) -> Option<&mut msgf_voice::Voice> {
         let max_note = self.ntvec.len();
         let mut return_num = max_note;
         for i in 0..max_note {
