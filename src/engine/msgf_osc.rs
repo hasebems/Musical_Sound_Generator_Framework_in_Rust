@@ -108,17 +108,18 @@ impl Osc {
         ap
     }
     fn pseudo_sine(mut phase:f32) -> f32 {
+        // Lagrange interpolation
         while phase > 1.0 { phase -= 1.0 }
         let nrm_phase:f32 = phase * 256.0;
         let phase_locate = nrm_phase.round() as usize;
         let x1 = nrm_phase - phase_locate as f32;
-        //let x0 = x1 + 1.0;
+        //let x0 = x1 + 1.0; // cubic interpolation
         //let x2 = x1 - 1.0;
         //let x3 = x1 - 2.0;
         //let mut y = -(x1*x2*x3*SINE_TABLE[phase_locate+1]/6.0) + (x0*x2*x3*SINE_TABLE[phase_locate+2]/2.0)
         //            -(x0*x1*x3*SINE_TABLE[phase_locate+3]/2.0) + (x0*x1*x2*SINE_TABLE[phase_locate+4]/6.0);
         //assert!(phase_locate < 258, "{},{},{},{}:{}->{}", x0,x1,x2,x3,phase_locate,y);
-        let y0 = SINE_TABLE[phase_locate+2];                    //
+        let y0 = SINE_TABLE[phase_locate+2];                    //  linear interpolation
         let mut y = (SINE_TABLE[phase_locate+3] - y0)*x1 + y0;  //
         if y > 1.0 { y = 1.0 }
         else if y < -1.0 { y = -1.0 }
@@ -167,12 +168,12 @@ impl Osc {
                 }
             }
         }
-        let piconst = 1.0/general::SAMPLING_FREQ;
+        let delta_phase = self.base_pitch/general::SAMPLING_FREQ;
         let mut phase = self.next_phase;
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         for i in 0..abuf.sample_number {
             abuf.set_abuf(i, wave_func(phase, max_overtone));
-            phase += (self.base_pitch*piconst)*(1.0 + lbuf.ctrl_for_audio(i));
+            phase += delta_phase*(1.0 + lbuf.ctrl_for_audio(i));
             while phase > 1.0 { phase -= 1.0 }
         }
         self.next_phase = phase;
