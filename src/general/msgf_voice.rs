@@ -21,7 +21,7 @@ pub enum NoteStatus {
     AfterNoteOff,
     DuringDamp,
 }
-const DAMP_RATE: u32 = 400;		// * dac time(22.68usec)
+const DAMP_TIME: u32 = 300;		// * dac time(22.68usec)
 
 //---------------------------------------------------------
 //		Class
@@ -47,7 +47,7 @@ impl PartialEq for Voice {
 }
 
 impl Voice {
-    pub fn new(note: u8, vel: u8, inst_set: usize) -> Voice {
+    pub fn new(note: u8, vel: u8, inst_set: usize, _mdlt: u8, _vol: u8, _pan: u8, exp: u8) -> Voice {
         Self {
             note,
             vel,
@@ -57,8 +57,12 @@ impl Voice {
             osc: msgf_osc::Osc::new(note, inst_set),
             aeg: msgf_aeg::Aeg::new(inst_set),
             lfo: msgf_lfo::Lfo::new(inst_set),
-            max_note_vol: 0.5f32.powf(4.0), // 4bit margin
+            max_note_vol: Voice::calc_vol(exp),
         }
+    }
+    fn calc_vol(exp: u8) -> f32 {
+        let sq: f32 = exp as f32;
+        (0.5f32.powf(4.0)*sq*sq)/16384.0    // 4bit margin
     }
     pub fn start_sound(&mut self) {
         self.aeg.move_to_attack();
@@ -70,6 +74,9 @@ impl Voice {
     }
     pub fn note_num(&self) -> u8 {self.note}
     pub fn _velocity(&self) -> u8 {self.vel}
+    pub fn expression(&mut self, value: u8) {
+        self.max_note_vol = Voice::calc_vol(value);
+    }
     pub fn status(&self) -> NoteStatus {self.status}
     pub fn damp(&mut self) {
         self.status = NoteStatus::DuringDamp;
@@ -83,8 +90,9 @@ impl Voice {
         } else {    //	Damp
             for snum in 0..abuf.sample_number {
                 let mut rate: f32 = 0.0;
-                if self.damp_counter <= DAMP_RATE {
-                    rate = ((DAMP_RATE as f32) - (self.damp_counter as f32))/(DAMP_RATE as f32);
+                if self.damp_counter <= DAMP_TIME {
+                    let cntdwn = DAMP_TIME - self.damp_counter;
+                    rate = (cntdwn as f32)/(DAMP_TIME as f32);
                     rate *= rate;
                 }
                 abuf.mul_abuf(snum, rate);

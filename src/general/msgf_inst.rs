@@ -18,10 +18,14 @@ use crate::app::msgf_prm;
 pub struct Inst {
     ntvec: Vec<msgf_voice::Voice>,
     inst_number: usize,
+    mdlt: u8,
+    vol: u8,
+    pan: u8,
+    exp: u8,
 }
 
 impl Inst {
-    pub fn new(mut inst_number: usize) -> Self {
+    pub fn new(mut inst_number: usize, mdlt: u8, vol: u8, pan: u8, exp: u8) -> Self {
         let max_tone = msgf_prm::MAX_TONE_COUNT;
         if inst_number >= max_tone {
             inst_number = max_tone-1;
@@ -29,6 +33,10 @@ impl Inst {
         Self {
             ntvec: Vec::new(),
             inst_number,
+            mdlt,
+            vol,
+            pan,
+            exp,
         }
     }
     pub fn note_off(&mut self, dt2: u8, _dt3: u8) {
@@ -38,11 +46,17 @@ impl Inst {
         }
     }
     pub fn note_on(&mut self, dt2: u8, dt3: u8) {
-        let mut new_voice: msgf_voice::Voice = msgf_voice::Voice::new(dt2, dt3, self.inst_number);
+        let mut new_voice = msgf_voice::Voice::new(dt2, dt3, self.inst_number, 
+            self.mdlt, self.vol, self.pan, self.exp);
         new_voice.start_sound();
         self.ntvec.push(new_voice);
     }
-    pub fn expression(&mut self, _value: u8) {}
+    pub fn expression(&mut self, value: u8) {
+        self.exp = value;
+        for ntobj in self.ntvec.iter_mut() {
+            ntobj.expression(value);
+        }
+    }
     pub fn sustain(&mut self, _value: u8) {}
     pub fn all_sound_off(&mut self) {
         for ntobj in self.ntvec.iter_mut() {
