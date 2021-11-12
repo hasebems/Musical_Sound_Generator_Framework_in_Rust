@@ -21,3 +21,4 @@ pub const MAX_BUFFER_SIZE: usize = 1024;
 pub const SAMPLING_FREQ: f32 = 44100.0;
 pub const PI: f32 = std::f32::consts::PI;
 pub const AUDIO_FRAME_PER_CONTROL: usize = 128;
+pub const DAMP_LIMIT_DEPTH: f32 = 0.0001;

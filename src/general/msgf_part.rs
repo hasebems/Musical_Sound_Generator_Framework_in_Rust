@@ -68,7 +68,10 @@ impl Part {
             0 => self.cc0_msb = value,
             1 => self.cc1_modulation_wheel = value,
             5 => self.cc5_portamento_time = value,
-            7 => self.cc7_volume = value,
+            7 => {
+                self.cc7_volume = value;
+                self.inst.volume(value);
+            }
             10 => self.cc10_pan = value,
             11 => {
                 self.cc11_expression = value;

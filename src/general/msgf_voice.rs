@@ -38,6 +38,7 @@ pub struct Voice {
     aeg: msgf_aeg::Aeg,
     lfo: msgf_lfo::Lfo,
     max_note_vol: f32,
+    ended: bool,
 }
 
 impl PartialEq for Voice {
@@ -47,7 +48,8 @@ impl PartialEq for Voice {
 }
 
 impl Voice {
-    pub fn new(note: u8, vel: u8, inst_set: usize, _mdlt: u8, _vol: u8, _pan: u8, exp: u8) -> Voice {
+    pub fn new(note: u8, vel: u8, inst_set: usize, 
+               _mdlt: u8, vol: u8, _pan: u8, exp: u8) -> Voice {
         Self {
             note,
             vel,
@@ -57,12 +59,15 @@ impl Voice {
             osc: msgf_osc::Osc::new(note, inst_set),
             aeg: msgf_aeg::Aeg::new(inst_set),
             lfo: msgf_lfo::Lfo::new(inst_set),
-            max_note_vol: Voice::calc_vol(exp),
+            max_note_vol: Voice::calc_vol(vol, exp),
+            ended: false,
         }
     }
-    fn calc_vol(exp: u8) -> f32 {
-        let sq: f32 = exp as f32;
-        (0.5f32.powf(4.0)*sq*sq)/16384.0    // 4bit margin
+    fn calc_vol(vol:u8, exp: u8) -> f32 {
+        let exp_sq = exp as f32;
+        let vol_sq = vol as f32;
+        let total_vol = 0.5f32.powf(4.0);    // 4bit margin
+        (total_vol*vol_sq*exp_sq)/16384.0
     }
     pub fn start_sound(&mut self) {
         self.aeg.move_to_attack();
@@ -74,19 +79,23 @@ impl Voice {
     }
     pub fn note_num(&self) -> u8 {self.note}
     pub fn _velocity(&self) -> u8 {self.vel}
-    pub fn expression(&mut self, value: u8) {
-        self.max_note_vol = Voice::calc_vol(value);
+    pub fn amplitude(&mut self, volume: u8, expression: u8) {
+        self.max_note_vol = Voice::calc_vol(volume, expression);
     }
     pub fn status(&self) -> NoteStatus {self.status}
     pub fn damp(&mut self) {
         self.status = NoteStatus::DuringDamp;
         self.damp_counter = 0;
     }
-    fn manage_note_level(&mut self, abuf: &mut msgf_afrm::AudioFrame, aegbuf: &mut msgf_cfrm::CtrlFrame) {
+    fn manage_note_level(&mut self, abuf: &mut msgf_afrm::AudioFrame, aegbuf: &mut msgf_cfrm::CtrlFrame) -> bool {
         if self.status != NoteStatus::DuringDamp {
             //	Check Level
             let level = aegbuf.get_max_level();
             self.lvl_check_buf.put_abuf(level);
+            if general::DAMP_LIMIT_DEPTH > level {
+                println!("Damped!");
+                self.damp();
+            }
         } else {    //	Damp
             for snum in 0..abuf.sample_number {
                 let mut rate: f32 = 0.0;
@@ -97,10 +106,17 @@ impl Voice {
                 }
                 abuf.mul_abuf(snum, rate);
                 self.damp_counter += 1;
+                if self.damp_counter > DAMP_TIME {
+                    self.ended = true;
+                    break;
+                }
             }
         }
+        self.ended
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, in_number_frames: usize) {
+    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, in_number_frames: usize) -> bool {
+        if self.ended {return self.ended;}
+
         //  Pitch Control
         let cbuf_size = msgf_cfrm::CtrlFrame::get_cbuf_size(in_number_frames);
         let lbuf = &mut msgf_cfrm::CtrlFrame::new(cbuf_size);
@@ -120,6 +136,6 @@ impl Voice {
             let aeg = aegbuf.ctrl_for_audio(i);
             abuf.mul_abuf(i, self.max_note_vol*aeg);
         }
-        self.manage_note_level(abuf, aegbuf);
+        self.manage_note_level(abuf, aegbuf)
     }
 }

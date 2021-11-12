@@ -11,11 +11,6 @@
 use crate::general;
 
 //---------------------------------------------------------
-//		Constants
-//---------------------------------------------------------
-const DAMP_LIMIT_DEPTH: f32 = 0.0001;
-
-//---------------------------------------------------------
 //		Class
 //---------------------------------------------------------
 pub struct AudioFrame {
@@ -86,18 +81,18 @@ impl AudioFrame {
         }
         max_val
     }
-    pub fn _mix(&mut self, srcbuf: &AudioFrame) {
+    pub fn mix(&mut self, srcbuf: &AudioFrame) {
         for i in 0..self.sample_number {
             let val: f32 = srcbuf.get_abuf(i);
             self.add_abuf(i, val);
         }
     }
-    pub fn mix_and_check_no_sound(&mut self, srcbuf: &AudioFrame) -> bool {
+    pub fn _mix_and_check_no_sound(&mut self, srcbuf: &AudioFrame) -> bool {
         let mut cnt: usize = 0;
         for i in 0..self.sample_number {
             let val: f32 = srcbuf.get_abuf(i);
             self.add_abuf(i, val);
-            if val < DAMP_LIMIT_DEPTH {
+            if val < general::DAMP_LIMIT_DEPTH {
                 cnt += 1;
             }
         }

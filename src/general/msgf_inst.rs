@@ -51,10 +51,16 @@ impl Inst {
         new_voice.start_sound();
         self.ntvec.push(new_voice);
     }
+    pub fn volume(&mut self, value: u8) {
+        self.vol = value;
+        for ntobj in self.ntvec.iter_mut() {
+            ntobj.amplitude(self.vol, value);
+        }
+    }
     pub fn expression(&mut self, value: u8) {
         self.exp = value;
         for ntobj in self.ntvec.iter_mut() {
-            ntobj.expression(value);
+            ntobj.amplitude(self.vol, value);
         }
     }
     pub fn sustain(&mut self, _value: u8) {}
@@ -75,16 +81,16 @@ impl Inst {
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, in_number_frames: usize) {
         let sz = self.ntvec.len();
-        let mut no_sound = vec![false; sz];
+        let mut ch_ended = vec![false; sz];
         for i in 0..sz {
             if let Some(nt) = self.ntvec.get_mut(i) {
                 let nt_audio = &mut msgf_afrm::AudioFrame::new(in_number_frames);
-                nt.process(nt_audio, in_number_frames);
-                no_sound[i] = abuf.mix_and_check_no_sound(nt_audio);
+                ch_ended[i] = nt.process(nt_audio, in_number_frames);
+                abuf.mix(nt_audio);
             }
         }
         for i in 0..sz {
-            if no_sound[i] {
+            if ch_ended[i] {
                 //  一つ消去したら、ループから抜ける
                 self.ntvec.remove(i);
                 break;
