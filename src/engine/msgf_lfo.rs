@@ -32,7 +32,6 @@ pub enum LfoWave {
 }
 pub struct LfoParameter {
     pub freq: f32,
-    pub depth: f32,
     pub wave: LfoWave,
     pub direction: LfoDirection,
     pub fadein_time: u64,
@@ -40,7 +39,6 @@ pub struct LfoParameter {
 }
 //---------------------------------------------------------
 pub struct Lfo {
-    depth: f32,
     next_phase: f32,
     delta_phase: f32,
     direction: LfoDirection,
@@ -57,7 +55,6 @@ impl Lfo {
         let lfo_prm = &msgf_prm::TONE_PRM[inst_set].lfo;
         let coef = Lfo::set_lfo(lfo_prm.wave, lfo_prm.direction);
         Lfo {
-            depth: lfo_prm.depth,
             next_phase: 0.0,
             delta_phase: (lfo_prm.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
             direction: lfo_prm.direction,
@@ -126,7 +123,7 @@ impl Lfo {
             }
             value = value*lvl + ofs;
     
-            abuf.set_cbuf(i, value*self.depth);
+            abuf.set_cbuf(i, value);
             self.dac_counter += 1;
         }
         while phase > 2.0*general::PI {

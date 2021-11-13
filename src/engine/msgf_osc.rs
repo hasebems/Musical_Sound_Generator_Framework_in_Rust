@@ -26,6 +26,7 @@ pub enum WvType {
 pub struct OscParameter {
     pub coarse_tune: i32,   //  [semitone]
     pub fine_tune: f32,     //  [cent]
+    pub lfo_depth: f32,     //  1.0 means +-1oct.
     pub wv_type: WvType,
 }
 //---------------------------------------------------------
@@ -78,6 +79,7 @@ const SINE_TABLE: [f32; 261] = //   index should be used by adding 2.
 pub struct Osc {
     base_pitch: f32,    //  [Hz]
     next_phase: f32,    //  0.0 - 1.0
+    lfo_depth: f32,
     wv_type: WvType,
 }
 //---------------------------------------------------------
@@ -86,6 +88,7 @@ impl Osc {
         Osc {
             base_pitch: Osc::calc_pitch(note, inst_set),
             next_phase: 0.0,
+            lfo_depth: msgf_prm::TONE_PRM[inst_set].osc.lfo_depth,
             wv_type: msgf_prm::TONE_PRM[inst_set].osc.wv_type,
         }
     }
@@ -173,7 +176,8 @@ impl Osc {
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         for i in 0..abuf.sample_number {
             abuf.set_abuf(i, wave_func(phase, max_overtone));
-            phase += delta_phase*(1.0 + lbuf.ctrl_for_audio(i));
+            let magnitude = lbuf.ctrl_for_audio(i)*self.lfo_depth;
+            phase += delta_phase*(2.0_f32.powf(magnitude));
             while phase > 1.0 { phase -= 1.0 }
         }
         self.next_phase = phase;
