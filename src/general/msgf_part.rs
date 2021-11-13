@@ -54,7 +54,7 @@ impl Part {
             _cc126_mono: 1,
             program_number: 0,
             pitch_bend_value: 0,
-            inst: msgf_inst::Inst::new(0,0,100,64,127),//pgn,mdlt,vol,pan,exp
+            inst: msgf_inst::Inst::new(0,100,64,127),//pgn,vol,pan,exp
         }
     }
     pub fn note_off(&mut self, dt2: u8, dt3: u8) {
@@ -66,7 +66,10 @@ impl Part {
     pub fn control_change(&mut self, controller: u8, value: u8) {
         match controller {
             0 => self.cc0_msb = value,
-            1 => self.cc1_modulation_wheel = value,
+            1 => {
+                self.cc1_modulation_wheel = value;
+                self.inst.modulation(value);
+            }
             5 => self.cc5_portamento_time = value,
             7 => {
                 self.cc7_volume = value;
@@ -97,8 +100,11 @@ impl Part {
     }
     pub fn program_change(&mut self, dt2: u8) {
         self.program_number = dt2;
-        self.inst = msgf_inst::Inst::new(dt2 as usize, 
-            self.cc1_modulation_wheel, self.cc7_volume, self.cc10_pan, self.cc11_expression);
+        self.inst = msgf_inst::Inst::new(
+            dt2 as usize, 
+            self.cc7_volume,
+            self.cc10_pan,
+            self.cc11_expression);
         println!("Program Change: {}",dt2);
     }
     pub fn pitch_bend(&mut self, bend: i16) {

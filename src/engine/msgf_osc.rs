@@ -84,14 +84,15 @@ pub struct Osc {
 }
 //---------------------------------------------------------
 impl Osc {
-    pub fn new(note:u8, inst_set:usize) -> Osc {
+    pub fn new(note:u8, inst_set:usize, pmd:f32) -> Osc {
         Osc {
             base_pitch: Osc::calc_pitch(note, inst_set),
             next_phase: 0.0,
-            lfo_depth: msgf_prm::TONE_PRM[inst_set].osc.lfo_depth,
+            lfo_depth: pmd,
             wv_type: msgf_prm::TONE_PRM[inst_set].osc.wv_type,
         }
     }
+    pub fn change_pmd(&mut self, value:f32) {self.lfo_depth = value;}
     fn limit_note(calculated_note:i32) -> u8 {
         let mut note = calculated_note;
         while note < 0 { note += 12;}

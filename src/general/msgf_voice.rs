@@ -48,22 +48,22 @@ impl PartialEq for Voice {
 }
 
 impl Voice {
-    pub fn new(note: u8, vel: u8, inst_set: usize, 
-               _mdlt: u8, vol: u8, _pan: u8, exp: u8) -> Voice {
+    pub fn new(note:u8, vel:u8, inst_set:usize, 
+               pmd:f32, vol:u8, _pan:u8, exp:u8) -> Voice {
         Self {
             note,
             vel,
             status: NoteStatus::DuringNoteOn,
             damp_counter: 0,
             lvl_check_buf: msgf_afrm::AudioFrame::new((general::SAMPLING_FREQ/100.0) as usize),
-            osc: msgf_osc::Osc::new(note, inst_set),
+            osc: msgf_osc::Osc::new(note, inst_set, pmd),
             aeg: msgf_aeg::Aeg::new(inst_set),
             lfo: msgf_lfo::Lfo::new(inst_set),
             max_note_vol: Voice::calc_vol(vol, exp),
             ended: false,
         }
     }
-    fn calc_vol(vol:u8, exp: u8) -> f32 {
+    fn calc_vol(vol:u8, exp:u8) -> f32 {
         let exp_sq = exp as f32;
         let vol_sq = vol as f32;
         let total_vol = 0.5f32.powf(4.0);    // 4bit margin
@@ -79,6 +79,9 @@ impl Voice {
     }
     pub fn note_num(&self) -> u8 {self.note}
     pub fn _velocity(&self) -> u8 {self.vel}
+    pub fn change_pmd(&mut self, value: f32) {
+        self.osc.change_pmd(value);
+    }
     pub fn amplitude(&mut self, volume: u8, expression: u8) {
         self.max_note_vol = Voice::calc_vol(volume, expression);
     }
