@@ -106,12 +106,13 @@ impl Aeg {
         self.interpolate_value = 0.0;
     }
     fn calc_delta_eg(&mut self, eg_diff: f32) -> f32 {
-          // 0.0 -> 1.01 の動きを作り出し、interpolate_value に格納
-          // その値を eg_diff にかけて、現在の到達値を返す
+        // 0.0 -> 1.0 の動きを作り出し、interpolate_value に格納
+        // その値を eg_diff にかけて、現在の到達値を返す
+        const STEP_BEFORE_REACHED: f32 = 0.001;
         let mut intplt = self.interpolate_value;
-        if intplt > 0.9 {
-            intplt += 0.01;
-            if intplt > 1.01 {intplt = 1.01;}
+        if intplt > 0.98 { // この数値で到達タイミングを調整
+            intplt += STEP_BEFORE_REACHED;
+            if intplt > 1.0+STEP_BEFORE_REACHED {intplt = 1.0+STEP_BEFORE_REACHED;}
         } else {
             intplt += (1.0-intplt)*(self.crnt_rate);
         }
