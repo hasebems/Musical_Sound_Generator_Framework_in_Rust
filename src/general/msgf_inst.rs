@@ -20,7 +20,7 @@ pub struct Inst {
     inst_number: usize,
     mdlt: f32,
     vol: u8,
-    pan: u8,
+    pan: f32,
     exp: u8,
 }
 
@@ -35,7 +35,7 @@ impl Inst {
             inst_number,
             mdlt: msgf_prm::TONE_PRM[inst_number].osc.lfo_depth,
             vol,
-            pan,
+            pan: Self::calc_pan(pan),
             exp,
         }
     }
@@ -47,33 +47,36 @@ impl Inst {
     }
     pub fn note_on(&mut self, dt2: u8, dt3: u8) {
         let mut new_voice = msgf_voice::Voice::new(dt2, dt3, self.inst_number, 
-            self.mdlt, self.vol, self.pan, self.exp);
+            self.mdlt, self.vol, self.exp);
         new_voice.start_sound();
         self.vcevec.push(new_voice);
     }
+
     pub fn modulation(&mut self, value: u8) {
-        self.mdlt = 0.5f32*(value as f32)/127.0;
-        for vce in self.vcevec.iter_mut() {
-            vce.change_pmd(self.mdlt);
-        }
+        let mdlt = 0.5f32*(value as f32)/127.0;
+        self.mdlt = mdlt;
+        self.vcevec.iter_mut().for_each(|vce| vce.change_pmd(mdlt));
     }
     pub fn volume(&mut self, value: u8) {
         self.vol = value;
-        for vce in self.vcevec.iter_mut() {
-            vce.amplitude(self.vol, value);
-        }
+        let exp = self.exp;
+        self.vcevec.iter_mut().for_each(|vce| vce.amplitude(value, exp));
+    }
+    fn calc_pan(mut value:u8) -> f32 {
+        if value == 127 {value = 128;}
+        (value as f32)/128.0
+    }
+    pub fn pan(&mut self, value: u8) {
+        self.pan = Self::calc_pan(value);
     }
     pub fn expression(&mut self, value: u8) {
         self.exp = value;
-        for vce in self.vcevec.iter_mut() {
-            vce.amplitude(self.vol, value);
-        }
+        let vol = self.vol;
+        self.vcevec.iter_mut().for_each(|vce| vce.amplitude(vol, value));
     }
     pub fn sustain(&mut self, _value: u8) {}
     pub fn all_sound_off(&mut self) {
-        for vce in self.vcevec.iter_mut() {
-            vce.damp();
-        }
+        self.vcevec.iter_mut().for_each(|vce| vce.damp());
     }
     pub fn _release_note(&mut self, nt: &msgf_voice::Voice){
         let ntcmp = self.vcevec.iter_mut();
@@ -85,14 +88,18 @@ impl Inst {
             }
         }
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, in_number_frames: usize) {
+    pub fn process(&mut self,
+      abuf_l: &mut msgf_afrm::AudioFrame,
+      abuf_r: &mut msgf_afrm::AudioFrame,
+      in_number_frames: usize) {
         let sz = self.vcevec.len();
         let mut ch_ended = vec![false; sz];
         for i in 0..sz {
             if let Some(nt) = self.vcevec.get_mut(i) {
                 let nt_audio = &mut msgf_afrm::AudioFrame::new(in_number_frames);
                 ch_ended[i] = nt.process(nt_audio, in_number_frames);
-                abuf.mix(nt_audio);
+                abuf_l.mul_and_mix(nt_audio, 1.0-self.pan);
+                abuf_r.mul_and_mix(nt_audio, self.pan);
             }
         }
         for i in 0..sz {

@@ -81,9 +81,9 @@ impl AudioFrame {
         }
         max_val
     }
-    pub fn mix(&mut self, srcbuf: &AudioFrame) {
+    pub fn mul_and_mix(&mut self, srcbuf: &AudioFrame, mul_value:f32) {
         for i in 0..self.sample_number {
-            let val: f32 = srcbuf.get_abuf(i);
+            let val: f32 = srcbuf.get_abuf(i)*mul_value;
             self.add_abuf(i, val);
         }
     }

@@ -75,7 +75,10 @@ impl Part {
                 self.cc7_volume = value;
                 self.inst.volume(value);
             }
-            10 => self.cc10_pan = value,
+            10 => {
+                self.cc10_pan = value;
+                self.inst.pan(value);
+            }
             11 => {
                 self.cc11_expression = value;
                 self.inst.expression(value);
@@ -114,10 +117,11 @@ impl Part {
                    abuf_l: &mut msgf_afrm::AudioFrame,
                    abuf_r: &mut msgf_afrm::AudioFrame,
                    in_number_frames: usize) {
-        let inst_audio_buffer = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
-        self.inst.process(inst_audio_buffer, in_number_frames);
+        let inst_audio_buffer_l = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
+        let inst_audio_buffer_r = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
+        self.inst.process(inst_audio_buffer_l, inst_audio_buffer_r, in_number_frames);
         // Part Volume, Part Pan, Effect 
-        inst_audio_buffer.copy_to_abuf(abuf_l);
-        inst_audio_buffer.copy_to_abuf(abuf_r);
+        inst_audio_buffer_l.copy_to_abuf(abuf_l);
+        inst_audio_buffer_r.copy_to_abuf(abuf_r);
     }
 }

@@ -48,8 +48,7 @@ impl PartialEq for Voice {
 }
 
 impl Voice {
-    pub fn new(note:u8, vel:u8, inst_set:usize, 
-               pmd:f32, vol:u8, _pan:u8, exp:u8) -> Voice {
+    pub fn new(note:u8, vel:u8, inst_set:usize, pmd:f32, vol:u8, exp:u8) -> Voice {
         Self {
             note,
             vel,
