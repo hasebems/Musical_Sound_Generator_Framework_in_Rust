@@ -24,6 +24,10 @@ pub struct Inst {
     exp: u8,
 }
 
+impl Drop for Inst {
+    fn drop(&mut self) {self.vcevec.clear();}
+}
+
 impl Inst {
     pub fn new(mut inst_number: usize, vol: u8, pan: u8, exp: u8) -> Self {
         let max_tone = msgf_prm::MAX_TONE_COUNT;
