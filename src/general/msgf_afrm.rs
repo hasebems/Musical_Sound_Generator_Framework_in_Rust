@@ -32,6 +32,11 @@ impl AudioFrame {
             ab[i] = self.abuf[i];
         }
     }
+    pub fn add_to_sysbuf(&self, ab: &mut [f32; general::MAX_BUFFER_SIZE]) {
+        for i in 0..self.sample_number {
+            ab[i] += self.abuf[i];
+        }
+    }
     pub fn copy_to_abuf(&self, ab: &mut AudioFrame) {
         for i in 0..self.sample_number {
             ab.abuf[i] = self.abuf[i];
