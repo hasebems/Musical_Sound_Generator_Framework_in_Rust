@@ -19,6 +19,7 @@ pub struct Inst {
     vcevec: Vec<msgf_voice::Voice>,
     inst_number: usize,
     mdlt: f32,
+    pit: f32,   //  [cent]
     vol: u8,
     pan: f32,
     exp: u8,
@@ -38,6 +39,7 @@ impl Inst {
             vcevec: Vec::new(),
             inst_number,
             mdlt: msgf_prm::TONE_PRM[inst_number].osc.lfo_depth,
+            pit: 0.0,
             vol,
             pan: Self::calc_pan(pan),
             exp,
@@ -51,7 +53,7 @@ impl Inst {
     }
     pub fn note_on(&mut self, dt2: u8, dt3: u8) {
         let mut new_voice = msgf_voice::Voice::new(dt2, dt3, self.inst_number, 
-            self.mdlt, self.vol, self.exp);
+            self.mdlt, self.pit, self.vol, self.exp);
         new_voice.start_sound();
         self.vcevec.push(new_voice);
     }
@@ -77,6 +79,11 @@ impl Inst {
         self.exp = value;
         let vol = self.vol;
         self.vcevec.iter_mut().for_each(|vce| vce.amplitude(vol, value));
+    }
+    pub fn pitch(&mut self, bend:i16, tune_coarse:u8, tune_fine:u8) {
+        let pit:f32 = ((bend as f32)*200.0)/8192.0 + ((tune_coarse as f32)-64.0)*100.0 + ((tune_fine as f32)-64.0)*100.0/64.0;
+        self.pit = pit;
+        self.vcevec.iter_mut().for_each(|vce| vce.pitch(pit));
     }
     pub fn sustain(&mut self, _value: u8) {}
     pub fn all_sound_off(&mut self) {

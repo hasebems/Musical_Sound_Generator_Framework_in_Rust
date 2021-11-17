@@ -38,7 +38,7 @@ const PITCH_OF_A: [f32; 11] =
     13.75, 27.5, 55.0, 110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0  // [Hz]
 ];
 const ABORT_FREQUENCY: f32 = 12000.0;
-const SINE_TABLE: [f32; 261] = //   index should be used by adding 2.
+const SIN_TABLE: [f32; 261] = //   index should be used by adding 2.
 [
 -0.049067674,   -0.024541229,
 0.0,            0.024541229,    0.049067674,    0.073564564,    0.09801714,     0.122410675,    0.146730474,    0.170961889,
@@ -78,15 +78,17 @@ const SINE_TABLE: [f32; 261] = //   index should be used by adding 2.
 //---------------------------------------------------------
 pub struct Osc {
     base_pitch: f32,    //  [Hz]
+    cnt_ratio: f32,     //  ratio of Hz
     next_phase: f32,    //  0.0 - 1.0
     lfo_depth: f32,
     wv_type: WvType,
 }
 //---------------------------------------------------------
 impl Osc {
-    pub fn new(note:u8, inst_set:usize, pmd:f32) -> Osc {
+    pub fn new(note:u8, inst_set:usize, pmd:f32, cnt_pitch:f32) -> Osc {
         Osc {
-            base_pitch: Osc::calc_pitch(note, inst_set),
+            base_pitch: Osc::calc_base_pitch(note, inst_set),
+            cnt_ratio: Osc::calc_cnt_pitch(cnt_pitch),
             next_phase: 0.0,
             lfo_depth: pmd,
             wv_type: msgf_prm::TONE_PRM[inst_set].osc.wv_type,
@@ -99,7 +101,7 @@ impl Osc {
         while note >= 128 { note -= 12;}
         note as u8
     }
-    fn calc_pitch(note:u8, inst_set:usize) -> f32 {
+    fn calc_base_pitch(note:u8, inst_set:usize) -> f32 {
         let tune_note: u8 = Osc::limit_note(note as i32 + msgf_prm::TONE_PRM[inst_set].osc.coarse_tune);
         let solfa_name: u8 = (tune_note + 3)%12;
         let octave: usize = ((tune_note as usize) + 3)/12;
@@ -120,14 +122,24 @@ impl Osc {
         //let x0 = x1 + 1.0; // cubic interpolation
         //let x2 = x1 - 1.0;
         //let x3 = x1 - 2.0;
-        //let mut y = -(x1*x2*x3*SINE_TABLE[phase_locate+1]/6.0) + (x0*x2*x3*SINE_TABLE[phase_locate+2]/2.0)
-        //            -(x0*x1*x3*SINE_TABLE[phase_locate+3]/2.0) + (x0*x1*x2*SINE_TABLE[phase_locate+4]/6.0);
+        //let mut y = -(x1*x2*x3*SIN_TABLE[phase_locate+1]/6.0) + (x0*x2*x3*SIN_TABLE[phase_locate+2]/2.0)
+        //            -(x0*x1*x3*SIN_TABLE[phase_locate+3]/2.0) + (x0*x1*x2*SIN_TABLE[phase_locate+4]/6.0);
         //assert!(phase_locate < 258, "{},{},{},{}:{}->{}", x0,x1,x2,x3,phase_locate,y);
-        let y0 = SINE_TABLE[phase_locate+2];                    //  linear interpolation
-        let mut y = (SINE_TABLE[phase_locate+3] - y0)*x1 + y0;  //
+        let y0 = SIN_TABLE[phase_locate+2];                    //  linear interpolation
+        let mut y = (SIN_TABLE[phase_locate+3] - y0)*x1 + y0;  //
         if y > 1.0 { y = 1.0 }
         else if y < -1.0 { y = -1.0 }
         y
+    }
+    fn calc_cnt_pitch(pitch: f32) -> f32 {    //  pitch : [cent]
+        let mut pt: f32 = 1.0;
+        if pitch != 0.0 {
+            pt = (pitch*(2_f32.ln()/1200_f32)).exp();
+        }
+        pt
+    }
+    pub fn change_pitch(&mut self, cnt_pitch:f32) {
+        self.cnt_ratio = Osc::calc_cnt_pitch(cnt_pitch);
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {
         let wave_func: fn(f32, usize) -> f32;
@@ -172,7 +184,7 @@ impl Osc {
                 }
             }
         }
-        let delta_phase = self.base_pitch/general::SAMPLING_FREQ;
+        let delta_phase = self.base_pitch*self.cnt_ratio/general::SAMPLING_FREQ;
         let mut phase = self.next_phase;
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         for i in 0..abuf.sample_number {

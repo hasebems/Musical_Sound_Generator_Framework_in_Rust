@@ -48,14 +48,14 @@ impl PartialEq for Voice {
 }
 
 impl Voice {
-    pub fn new(note:u8, vel:u8, inst_set:usize, pmd:f32, vol:u8, exp:u8) -> Voice {
+    pub fn new(note:u8, vel:u8, inst_set:usize, pmd:f32, pit:f32, vol:u8, exp:u8) -> Voice {
         Self {
             note,
             vel,
             status: NoteStatus::DuringNoteOn,
             damp_counter: 0,
             lvl_check_buf: msgf_afrm::AudioFrame::new((general::SAMPLING_FREQ/100.0) as usize),
-            osc: msgf_osc::Osc::new(note, inst_set, pmd),
+            osc: msgf_osc::Osc::new(note, inst_set, pmd, pit),
             aeg: msgf_aeg::Aeg::new(inst_set),
             lfo: msgf_lfo::Lfo::new(inst_set),
             max_note_vol: Voice::calc_vol(vol, exp),
@@ -83,6 +83,9 @@ impl Voice {
     }
     pub fn amplitude(&mut self, volume: u8, expression: u8) {
         self.max_note_vol = Voice::calc_vol(volume, expression);
+    }
+    pub fn pitch(&mut self, pitch:f32) {
+        self.osc.change_pitch(pitch);
     }
     pub fn status(&self) -> NoteStatus {self.status}
     pub fn damp(&mut self) {

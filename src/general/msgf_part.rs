@@ -83,8 +83,14 @@ impl Part {
                 self.cc11_expression = value;
                 self.inst.expression(value);
             }
-            12 => self.cc12_note_shift = value,
-            13 => self.cc13_tune = value,
+            12 => {
+                self.cc12_note_shift = value;
+                self.inst.pitch(self.pitch_bend_value,value,self.cc13_tune);
+            }
+            13 => {
+                self.cc13_tune = value;
+                self.inst.pitch(self.pitch_bend_value,self.cc12_note_shift,value);
+            }
             32 => self.cc32_lsb = value,
             64 => {
                 self.cc64_sustain = value;
@@ -108,10 +114,12 @@ impl Part {
             self.cc7_volume,
             self.cc10_pan,
             self.cc11_expression);
+        self.inst.pitch(self.pitch_bend_value,self.cc12_note_shift,self.cc13_tune);
         println!("Program Change: {}",dt2);
     }
     pub fn pitch_bend(&mut self, bend: i16) {
         self.pitch_bend_value = bend;
+        self.inst.pitch(bend,self.cc12_note_shift,self.cc13_tune);
     }
     pub fn process(&mut self,
                    abuf_l: &mut msgf_afrm::AudioFrame,
