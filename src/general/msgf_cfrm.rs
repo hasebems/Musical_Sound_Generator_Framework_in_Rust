@@ -8,7 +8,7 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
-use crate::general;
+use crate::msgf_if;
 
 //---------------------------------------------------------
 //		Class
@@ -26,7 +26,7 @@ impl CtrlFrame {
         }
     }
     pub fn get_cbuf_size(in_number_frames: usize) -> usize {
-        in_number_frames/general::AUDIO_FRAME_PER_CONTROL
+        in_number_frames/msgf_if::AUDIO_FRAME_PER_CONTROL
     }
     pub fn set_cbuf(&mut self, num: usize, val: f32) {
         self.cbuf[num] = val;
@@ -39,7 +39,7 @@ impl CtrlFrame {
     }
     pub fn _get_cbuf(&self, num: usize) -> f32 { self.cbuf[num]}
     pub fn ctrl_for_audio(&self, num: usize) -> f32 { // for Audio Buffer
-        self.cbuf[num/general::AUDIO_FRAME_PER_CONTROL]
+        self.cbuf[num/msgf_if::AUDIO_FRAME_PER_CONTROL]
     }
     pub fn get_max_level(&self) -> f32 {
         let mut max_val: f32 = 0.0;

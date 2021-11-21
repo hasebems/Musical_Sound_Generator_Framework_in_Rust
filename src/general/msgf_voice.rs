@@ -8,7 +8,7 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
-use crate::general;
+use crate::msgf_if;
 use crate::general::*;
 use crate::engine::*;
 use crate::app::va::*;
@@ -55,7 +55,7 @@ impl Voice {
             vel,
             status: NoteStatus::DuringNoteOn,
             damp_counter: 0,
-            lvl_check_buf: msgf_afrm::AudioFrame::new((general::SAMPLING_FREQ/100.0) as usize),
+            lvl_check_buf: msgf_afrm::AudioFrame::new((msgf_if::SAMPLING_FREQ/100.0) as usize),
             osc: msgf_osc::Osc::new(&va_prm::TONE_PRM[inst_set].osc, note, pmd, pit),
             aeg: msgf_aeg::Aeg::new(&va_prm::TONE_PRM[inst_set].aeg),
             lfo: msgf_lfo::Lfo::new(&va_prm::TONE_PRM[inst_set].lfo),
@@ -98,7 +98,7 @@ impl Voice {
             //	Check Level
             let level = aegbuf.get_max_level();
             self.lvl_check_buf.put_abuf(level);
-            if general::DAMP_LIMIT_DEPTH > level {
+            if msgf_if::DAMP_LIMIT_DEPTH > level {
                 println!("Damped!");
                 self.damp();
             }

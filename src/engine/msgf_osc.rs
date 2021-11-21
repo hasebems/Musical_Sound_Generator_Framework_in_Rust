@@ -8,7 +8,7 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
-use crate::general;
+use crate::msgf_if;
 use crate::general::*;
 
 //---------------------------------------------------------
@@ -151,7 +151,7 @@ impl Osc {
         match self.wv_type {
             WvType::Sine => {
                 //wave_func = |x, _y| {
-                //  let phase = x * 2.0 * general::PI;
+                //  let phase = x * 2.0 * msgf_if::PI;
                 //  phase.sin()
                 //}
                 wave_func = |x, _y| Osc::pseudo_sine(x);
@@ -188,7 +188,7 @@ impl Osc {
                 }
             }
         }
-        let delta_phase = self.base_pitch*self.cnt_ratio/general::SAMPLING_FREQ;
+        let delta_phase = self.base_pitch*self.cnt_ratio/msgf_if::SAMPLING_FREQ;
         let mut phase = self.next_phase;
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
         for i in 0..abuf.sample_number {

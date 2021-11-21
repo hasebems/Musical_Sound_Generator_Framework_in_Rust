@@ -8,7 +8,7 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
-use crate::general;
+use crate::msgf_if;
 use crate::general::*;
 
 //---------------------------------------------------------
@@ -59,7 +59,7 @@ impl Lfo {
         Lfo {
             prms,
             next_phase: 0.0,
-            delta_phase: (prms.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
+            delta_phase: (prms.freq*(msgf_if::AUDIO_FRAME_PER_CONTROL as f32))/msgf_if::SAMPLING_FREQ,
             direction: prms.direction,
             x1: coef.0,
             x2: coef.1,
@@ -74,7 +74,7 @@ impl Lfo {
             LfoWave::Tri => {x1=0.5; x2=1.5; y=4.0; z=0.0;}
             LfoWave::Saw => {x1=0.0; x2=2.0; y=2.0; z=0.0;}
             LfoWave::Squ => {x1=0.5; x2=1.5; y=100000.0; z=0.0;}
-            LfoWave::Sin => {x1=0.5; x2=1.5; y=2.0*general::PI; z=1.0/6.78;}
+            LfoWave::Sin => {x1=0.5; x2=1.5; y=2.0*msgf_if::PI; z=1.0/6.78;}
         };
         (x1, x2, y, z)
     }
@@ -128,8 +128,8 @@ impl Lfo {
             abuf.set_cbuf(i, value);
             self.dac_counter += 1;
         }
-        while phase > 2.0*general::PI {
-            phase -= 2.0*general::PI;
+        while phase > 2.0*msgf_if::PI {
+            phase -= 2.0*msgf_if::PI;
         }
         self.next_phase = phase;
     }

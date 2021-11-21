@@ -8,17 +8,19 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
-use crate::general;
+use crate::msgf_if;
 
 //---------------------------------------------------------
-//		Class
+//		Definition
 //---------------------------------------------------------
 pub struct AudioFrame {
     abuf: Vec<f32>,
     pub sample_number: usize,
     index: usize,
 }
-
+//---------------------------------------------------------
+//		Imprements
+//---------------------------------------------------------
 impl AudioFrame {
     pub fn new(sample_number: usize) -> Self {
         Self {
@@ -27,12 +29,12 @@ impl AudioFrame {
             index: 0,
         }
     }
-    pub fn copy_to_sysbuf(&self, ab: &mut [f32; general::MAX_BUFFER_SIZE]) {
+    pub fn copy_to_sysbuf(&self, ab: &mut [f32; msgf_if::MAX_BUFFER_SIZE]) {
         for i in 0..self.sample_number {
             ab[i] = self.abuf[i];
         }
     }
-    pub fn add_to_sysbuf(&self, ab: &mut [f32; general::MAX_BUFFER_SIZE]) {
+    pub fn add_to_sysbuf(&self, ab: &mut [f32; msgf_if::MAX_BUFFER_SIZE]) {
         for i in 0..self.sample_number {
             ab[i] += self.abuf[i];
         }
@@ -97,7 +99,7 @@ impl AudioFrame {
         for i in 0..self.sample_number {
             let val: f32 = srcbuf.get_abuf(i);
             self.add_abuf(i, val);
-            if val < general::DAMP_LIMIT_DEPTH {
+            if val < msgf_if::DAMP_LIMIT_DEPTH {
                 cnt += 1;
             }
         }

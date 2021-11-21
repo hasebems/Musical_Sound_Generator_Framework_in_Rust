@@ -26,7 +26,7 @@ pub extern "C" fn rust_recieve_midi_message(rust_msgf: &mut msgf_if::Msgf, dt1: 
     rust_msgf.recieve_midi_message(dt1, dt2, dt3);
 }
 #[no_mangle]
-pub extern "C" fn rust_process(rust_msgf: &mut msgf_if::Msgf, abuf_l: &mut [f32; general::MAX_BUFFER_SIZE], abuf_r: &mut [f32; general::MAX_BUFFER_SIZE],in_number_frames: u32) {
+pub extern "C" fn rust_process(rust_msgf: &mut msgf_if::Msgf, abuf_l: &mut [f32; msgf_if::MAX_BUFFER_SIZE], abuf_r: &mut [f32; msgf_if::MAX_BUFFER_SIZE],in_number_frames: u32) {
     rust_msgf.process(abuf_l, abuf_r, in_number_frames);
 }
 #[no_mangle]
