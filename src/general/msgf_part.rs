@@ -8,11 +8,11 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
+use crate::*;
 use crate::general::*;
-use crate::app::va::*;
 
 //---------------------------------------------------------
-//		Class
+//		Definition
 //---------------------------------------------------------
 pub struct Part {
     //	Part Latest Parameter Value
@@ -35,9 +35,12 @@ pub struct Part {
     //	Composite Object
 	inst: Box<dyn msgf_inst::Inst>,
 }
-
+//---------------------------------------------------------
+//		Imprements
+//---------------------------------------------------------
 impl Part {
     pub fn new() -> Self {
+        let inst_instance = app::get_inst(0,100,64,127); //pgn,vol,pan,exp,
         Self {
             cc0_msb: 0,
             cc1_modulation_wheel: 0,
@@ -54,7 +57,7 @@ impl Part {
             _cc126_mono: 1,
             program_number: 0,
             pitch_bend_value: 0,
-            inst: Box::new(va_inst::InstVa::new(0,100,64,127)), //pgn,vol,pan,exp,
+            inst: inst_instance,
         }
     }
     pub fn note_off(&mut self, dt2: u8, dt3: u8) {

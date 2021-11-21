@@ -8,3 +8,10 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 pub mod va;
+
+use crate::general::msgf_inst;
+use crate::app::va::*;
+
+pub fn get_inst(inst_number:usize, vol:u8, pan:u8, exp:u8) -> Box<dyn msgf_inst::Inst> {
+    Box::new(va_inst::InstVa::new(inst_number,vol,pan,exp))
+}
