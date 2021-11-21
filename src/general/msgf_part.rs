@@ -9,6 +9,7 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::general::*;
+use crate::app::va::*;
 
 //---------------------------------------------------------
 //		Class
@@ -33,7 +34,7 @@ pub struct Part {
 	
     //	Composite Object
     //inst_factory: &InstrumentFactory,
-	inst: msgf_inst::Inst,
+	inst: Box<dyn msgf_inst::Inst>,
 }
 
 impl Part {
@@ -54,7 +55,7 @@ impl Part {
             _cc126_mono: 1,
             program_number: 0,
             pitch_bend_value: 0,
-            inst: msgf_inst::Inst::new(0,100,64,127),//pgn,vol,pan,exp
+            inst: Box::new(va_inst::InstVa::new(0,100,64,127)), //pgn,vol,pan,exp,
         }
     }
     pub fn note_off(&mut self, dt2: u8, dt3: u8) {
@@ -109,12 +110,16 @@ impl Part {
     }
     pub fn program_change(&mut self, dt2: u8) {
         self.program_number = dt2;
-        self.inst = msgf_inst::Inst::new(
+        //self.inst.drop();
+        self.inst.change_inst(
             dt2 as usize, 
             self.cc7_volume,
             self.cc10_pan,
             self.cc11_expression);
-        self.inst.pitch(self.pitch_bend_value,self.cc12_note_shift,self.cc13_tune);
+        self.inst.pitch(
+            self.pitch_bend_value,
+            self.cc12_note_shift,
+            self.cc13_tune);
         println!("Program Change: {}",dt2);
     }
     pub fn pitch_bend(&mut self, bend: i16) {

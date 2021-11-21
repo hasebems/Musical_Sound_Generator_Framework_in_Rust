@@ -8,6 +8,6 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
-//pub mod va_inst;
+pub mod va_inst;
 //pub mod va_voice;
 pub mod va_prm;
