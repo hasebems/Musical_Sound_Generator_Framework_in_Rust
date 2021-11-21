@@ -1,5 +1,5 @@
 //
-//  msgf_prm.rs
+//  va_prm.rs
 //	Musical Sound Generator Framework
 //      Instruments Parameter
 //

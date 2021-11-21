@@ -10,7 +10,7 @@
 //
 use crate::general::*;
 use crate::general::msgf_voice::NoteStatus;
-use crate::app::*;
+use crate::app::va::*;
 
 //---------------------------------------------------------
 //		Class
@@ -31,14 +31,14 @@ impl Drop for Inst {
 
 impl Inst {
     pub fn new(mut inst_number: usize, vol: u8, pan: u8, exp: u8) -> Self {
-        let max_tone = msgf_prm::MAX_TONE_COUNT;
+        let max_tone = va_prm::MAX_TONE_COUNT;
         if inst_number >= max_tone {
             inst_number = max_tone-1;
         }
         Self {
             vcevec: Vec::new(),
             inst_number,
-            mdlt: msgf_prm::TONE_PRM[inst_number].osc.lfo_depth,
+            mdlt: va_prm::TONE_PRM[inst_number].osc.lfo_depth,
             pit: 0.0,
             vol,
             pan: Self::calc_pan(pan),

@@ -10,7 +10,6 @@
 //
 use crate::general;
 use crate::general::*;
-use crate::app::*;
 
 //---------------------------------------------------------
 //		Synth. Parameter
@@ -39,6 +38,7 @@ pub struct LfoParameter {
 }
 //---------------------------------------------------------
 pub struct Lfo {
+    prms: &'static LfoParameter,
     next_phase: f32,
     delta_phase: f32,
     direction: LfoDirection,
@@ -47,23 +47,21 @@ pub struct Lfo {
     y: f32,
     z: f32,
     dac_counter: u64,
-    prm: &'static LfoParameter,
 }
 //---------------------------------------------------------
 impl Lfo {
-    pub fn new(inst_set:usize) -> Lfo {
-        let lfo_prm = &msgf_prm::TONE_PRM[inst_set].lfo;
-        let coef = Lfo::set_lfo(lfo_prm.wave, lfo_prm.direction);
+    pub fn new(prms: &'static LfoParameter) -> Lfo {
+        let coef = Lfo::set_lfo(prms.wave, prms.direction);
         Lfo {
+            prms,
             next_phase: 0.0,
-            delta_phase: (lfo_prm.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
-            direction: lfo_prm.direction,
+            delta_phase: (prms.freq*(general::AUDIO_FRAME_PER_CONTROL as f32))/general::SAMPLING_FREQ,
+            direction: prms.direction,
             x1: coef.0,
             x2: coef.1,
             y: coef.2,
             z: coef.3,
             dac_counter: 0,
-            prm: lfo_prm,
         }
     }
     fn set_lfo(wv: LfoWave, _dir: LfoDirection) -> (f32, f32, f32, f32) {
@@ -106,11 +104,11 @@ impl Lfo {
             //	Fadein, Delay
             let mut lvl = 1.0;
             let mut ofs = 0.0;
-            if self.dac_counter < self.prm.fadein_time {
+            if self.dac_counter < self.prms.fadein_time {
                 lvl = 0.0;
-            } else if self.dac_counter < self.prm.fadein_time+self.prm.delay_time {
-                let tm = (self.dac_counter-self.prm.fadein_time) as f32;
-                lvl = tm/(self.prm.delay_time as f32);
+            } else if self.dac_counter < self.prms.fadein_time+self.prms.delay_time {
+                let tm = (self.dac_counter-self.prms.fadein_time) as f32;
+                lvl = tm/(self.prms.delay_time as f32);
             }
         
             //	Direction

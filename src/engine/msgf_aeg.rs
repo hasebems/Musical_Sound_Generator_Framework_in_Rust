@@ -9,7 +9,6 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::general::*;
-use crate::app::*;
 
 //---------------------------------------------------------
 //		Synth. Parameter
@@ -33,7 +32,7 @@ pub struct AegParameter {
 
 //---------------------------------------------------------
 pub struct Aeg {
-    aegprm: &'static AegParameter,
+    prms: &'static AegParameter,
     state: EgState,
     tgt_value: f32,
     src_value: f32,
@@ -44,9 +43,9 @@ pub struct Aeg {
 }
 //---------------------------------------------------------
 impl Aeg {
-    pub fn new(inst_set:usize) -> Aeg {
+    pub fn new(prms: &'static AegParameter) -> Aeg {
         Aeg {
-            aegprm: &msgf_prm::TONE_PRM[inst_set].aeg,
+            prms,
             state: EgState::NotYet,
             tgt_value: 0.0,
             src_value: 0.0,
@@ -59,27 +58,27 @@ impl Aeg {
     pub fn move_to_attack(&mut self) {
         self.src_value = 0.0;
         self.tgt_value = 1.0;
-        self.crnt_rate = self.aegprm.attack_rate;
+        self.crnt_rate = self.prms.attack_rate;
         self.state = EgState::Attack;
         self.interpolate_value = 0.0;
     }
     fn move_to_decay(&mut self, eg_crnt: f32) {
-        if self.aegprm.decay_rate == 1.0 {
+        if self.prms.decay_rate == 1.0 {
             self.move_to_sustain(eg_crnt);
         } else {
             self.src_value = eg_crnt;
-            self.tgt_value = self.aegprm.sustain_level;
-            self.crnt_rate = self.aegprm.decay_rate;
+            self.tgt_value = self.prms.sustain_level;
+            self.crnt_rate = self.prms.decay_rate;
             self.state = EgState::Decay;
             self.interpolate_value = 0.0;
         }
     }
     fn move_to_sustain(&mut self, eg_crnt: f32) {
-        if self.aegprm.sustain_level == 0.0 {
+        if self.prms.sustain_level == 0.0 {
             self.move_to_egdone();
         } else {
             self.src_value = eg_crnt;
-            self.tgt_value = self.aegprm.sustain_level;
+            self.tgt_value = self.prms.sustain_level;
             self.crnt_rate = 0.0;
             self.state = EgState::Sustain;
             self.interpolate_value = 0.0;
@@ -87,14 +86,14 @@ impl Aeg {
     }
     pub fn move_to_release(&mut self) {
         if self.state == EgState::Decay &&
-            (self.aegprm.release_rate < self.aegprm.decay_rate) {
+            (self.prms.release_rate < self.prms.decay_rate) {
             //  Decay 中かつ DR が RR より速ければ、Decay が終わるまで release は保留
             self.release_rsv = true;
         }
         else {
             self.src_value = self.crnt_value;
             self.tgt_value = 0.0;
-            self.crnt_rate = self.aegprm.release_rate;
+            self.crnt_rate = self.prms.release_rate;
             self.state = EgState::Release;
             self.interpolate_value = 0.0;
         }

@@ -10,7 +10,6 @@
 //
 use crate::general;
 use crate::general::*;
-use crate::app::*;
 
 //---------------------------------------------------------
 //		Synth. Parameter
@@ -77,6 +76,7 @@ const SIN_TABLE: [f32; 261] = //   index should be used by adding 2.
 ];
 //---------------------------------------------------------
 pub struct Osc {
+    //prms: &'static OscParameter,
     base_pitch: f32,    //  [Hz]
     cnt_ratio: f32,     //  ratio of Hz
     next_phase: f32,    //  0.0 - 1.0
@@ -85,13 +85,14 @@ pub struct Osc {
 }
 //---------------------------------------------------------
 impl Osc {
-    pub fn new(note:u8, inst_set:usize, pmd:f32, cnt_pitch:f32) -> Osc {
+    pub fn new(prms:&'static OscParameter, note:u8, pmd:f32, cnt_pitch:f32) -> Osc {
         Osc {
-            base_pitch: Osc::calc_base_pitch(note, inst_set),
+            //prms,
+            base_pitch: Osc::calc_base_pitch(prms, note),
             cnt_ratio: Osc::calc_cnt_pitch(cnt_pitch),
             next_phase: 0.0,
             lfo_depth: pmd,
-            wv_type: msgf_prm::TONE_PRM[inst_set].osc.wv_type,
+            wv_type: prms.wv_type,
         }
     }
     pub fn change_pmd(&mut self, value:f32) {self.lfo_depth = value;}
@@ -101,8 +102,8 @@ impl Osc {
         while note >= 128 { note -= 12;}
         note as u8
     }
-    fn calc_base_pitch(note:u8, inst_set:usize) -> f32 {
-        let tune_note: u8 = Osc::limit_note(note as i32 + msgf_prm::TONE_PRM[inst_set].osc.coarse_tune);
+    fn calc_base_pitch(prms:&OscParameter, note:u8) -> f32 {
+        let tune_note: u8 = Osc::limit_note(note as i32 + prms.coarse_tune);
         let solfa_name: u8 = (tune_note + 3)%12;
         let octave: usize = ((tune_note as usize) + 3)/12;
         let mut ap = PITCH_OF_A[octave];
@@ -110,7 +111,7 @@ impl Osc {
         for _ in 0..solfa_name {
             ap *= ratio;
         }
-        ap *= (msgf_prm::TONE_PRM[inst_set].osc.fine_tune*(2_f32.ln()/1200_f32)).exp();
+        ap *= (prms.fine_tune*(2_f32.ln()/1200_f32)).exp();
         ap
     }
     fn pseudo_sine(mut phase:f32) -> f32 {
