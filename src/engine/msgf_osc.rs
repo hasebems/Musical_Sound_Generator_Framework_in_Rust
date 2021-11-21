@@ -75,6 +75,8 @@ const SIN_TABLE: [f32; 261] = //   index should be used by adding 2.
 0.0,            0.024541229,    0.049067674,
 ];
 //---------------------------------------------------------
+//		Definition
+//---------------------------------------------------------
 pub struct Osc {
     //prms: &'static OscParameter,
     base_pitch: f32,    //  [Hz]
@@ -83,6 +85,8 @@ pub struct Osc {
     lfo_depth: f32,
     wv_type: WvType,
 }
+//---------------------------------------------------------
+//		Imprements
 //---------------------------------------------------------
 impl Osc {
     pub fn new(prms:&'static OscParameter, note:u8, pmd:f32, cnt_pitch:f32) -> Osc {
@@ -146,7 +150,6 @@ impl Osc {
         let wave_func: fn(f32, usize) -> f32;
         match self.wv_type {
             WvType::Sine => {
-                //  Case of using sine()
                 //wave_func = |x, _y| {
                 //  let phase = x * 2.0 * general::PI;
                 //  phase.sin()

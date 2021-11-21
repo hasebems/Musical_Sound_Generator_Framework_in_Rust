@@ -13,6 +13,15 @@ use crate::general::*;
 //---------------------------------------------------------
 //		Synth. Parameter
 //---------------------------------------------------------
+pub struct AegParameter {
+    pub attack_rate: f32,
+    pub decay_rate: f32,
+    pub sustain_level: f32,
+    pub release_rate: f32,
+}
+//---------------------------------------------------------
+//		Definition
+//---------------------------------------------------------
 #[derive(PartialEq, Clone, Copy)]
 pub enum EgState {
     NotYet,
@@ -23,14 +32,6 @@ pub enum EgState {
     EgDone,
     _Damp,
 }
-pub struct AegParameter {
-    pub attack_rate: f32,
-    pub decay_rate: f32,
-    pub sustain_level: f32,
-    pub release_rate: f32,
-}
-
-//---------------------------------------------------------
 pub struct Aeg {
     prms: &'static AegParameter,
     state: EgState,
@@ -41,6 +42,8 @@ pub struct Aeg {
     interpolate_value: f32,
     release_rsv: bool,
 }
+//---------------------------------------------------------
+//		Imprements
 //---------------------------------------------------------
 impl Aeg {
     pub fn new(prms: &'static AegParameter) -> Aeg {

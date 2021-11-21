@@ -11,16 +11,15 @@
 use crate::general::*;
 
 pub trait Inst {
-    //fn new(inst_number: usize, vol: u8, pan: u8, exp: u8);
     fn change_inst(&mut self, inst_number: usize, vol: u8, pan: u8, exp: u8);
-    fn note_off(&mut self, dt2: u8, _dt3: u8);
+    fn note_off(&mut self, dt2: u8, dt3: u8);
     fn note_on(&mut self, dt2: u8, dt3: u8);
     fn modulation(&mut self, value: u8);
     fn volume(&mut self, value: u8);
     fn pan(&mut self, value: u8);
     fn expression(&mut self, value: u8);
     fn pitch(&mut self, bend:i16, tune_coarse:u8, tune_fine:u8);
-    fn sustain(&mut self, _value: u8);
+    fn sustain(&mut self, value: u8);
     fn all_sound_off(&mut self);
     fn release_note(&mut self, nt: &msgf_voice::Voice);
     fn process(&mut self,

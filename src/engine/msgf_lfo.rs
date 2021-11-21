@@ -37,6 +37,8 @@ pub struct LfoParameter {
     pub delay_time: u64,
 }
 //---------------------------------------------------------
+//		Definition
+//---------------------------------------------------------
 pub struct Lfo {
     prms: &'static LfoParameter,
     next_phase: f32,
@@ -48,6 +50,8 @@ pub struct Lfo {
     z: f32,
     dac_counter: u64,
 }
+//---------------------------------------------------------
+//		Imprements
 //---------------------------------------------------------
 impl Lfo {
     pub fn new(prms: &'static LfoParameter) -> Lfo {

@@ -18,11 +18,11 @@ use crate::app::va::*;
 pub struct InstVa {
     vcevec: Vec<msgf_voice::Voice>,
     inst_number: usize,
-    mdlt: f32,
+    mdlt: f32,  //  0.0..0.5
     pit: f32,   //  [cent]
-    vol: u8,
-    pan: f32,
-    exp: u8,
+    vol: u8,    //  0..127
+    pan: f32,   //  -1..0..+1
+    exp: u8,    //  0..127
 }
 
 impl Drop for InstVa {

@@ -13,3 +13,11 @@ This software is released under the MIT License, see LICENSE.txt.
 - rust_recieve_midi_message() : MIDI受信します
 - rust_process() : Audio Buffer を渡す処理です(左右2ch)
 - rust_msgf_destroy() : インスタンスを解放します
+
+## 各フォルダの内容
+
+- /src : IF や module設定, 定数など
+- /src/general: フレームワーク部
+- /src/engine: 波形生成やフィルタなどの信号処理、音量コントロールなどの音色操作用の部品
+- /src/app: ソフトシンセのアプリケーション
+    - va: Virtual Analog 音源

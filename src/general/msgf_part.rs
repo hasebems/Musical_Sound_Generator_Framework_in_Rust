@@ -33,7 +33,6 @@ pub struct Part {
     pitch_bend_value: i16,
 	
     //	Composite Object
-    //inst_factory: &InstrumentFactory,
 	inst: Box<dyn msgf_inst::Inst>,
 }
 
@@ -110,7 +109,6 @@ impl Part {
     }
     pub fn program_change(&mut self, dt2: u8) {
         self.program_number = dt2;
-        //self.inst.drop();
         self.inst.change_inst(
             dt2 as usize, 
             self.cc7_volume,
