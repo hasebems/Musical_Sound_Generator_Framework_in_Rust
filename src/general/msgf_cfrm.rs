@@ -11,13 +11,15 @@
 use crate::msgf_if;
 
 //---------------------------------------------------------
-//		Class
+//		Definition
 //---------------------------------------------------------
 pub struct CtrlFrame {
     cbuf: Vec<f32>,
     pub sample_number: usize,
 }
-
+//---------------------------------------------------------
+//		Imprements
+//---------------------------------------------------------
 impl CtrlFrame {
     pub fn new(sample_number: usize) -> Self {
         Self {

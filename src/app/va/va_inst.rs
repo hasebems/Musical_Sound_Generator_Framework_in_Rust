@@ -9,14 +9,14 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::general::*;
-use crate::general::msgf_voice::NoteStatus;
+use crate::general::msgf_voice::*;
 use crate::app::va::*;
 
 //---------------------------------------------------------
-//		Class
+//		Definition
 //---------------------------------------------------------
 pub struct InstVa {
-    vcevec: Vec<msgf_voice::Voice>,
+    vcevec: Vec<va_voice::VoiceVa>,
     inst_number: usize,
     mdlt: f32,  //  0.0..0.5
     pit: f32,   //  [cent]
@@ -24,11 +24,13 @@ pub struct InstVa {
     pan: f32,   //  -1..0..+1
     exp: u8,    //  0..127
 }
-
+//---------------------------------------------------------
+//		Imprements
+//---------------------------------------------------------
 impl Drop for InstVa {
     fn drop(&mut self) {self.vcevec.clear();}
 }
-
+//---------------------------------------------------------
 impl msgf_inst::Inst for InstVa {
     fn change_inst(&mut self, mut inst_number: usize, vol: u8, pan: u8, exp: u8) {
         let max_tone = va_prm::MAX_TONE_COUNT;
@@ -49,7 +51,7 @@ impl msgf_inst::Inst for InstVa {
         }
     }
     fn note_on(&mut self, dt2: u8, dt3: u8) {
-        let mut new_voice = msgf_voice::Voice::new(dt2, dt3, self.inst_number, 
+        let mut new_voice = va_voice::VoiceVa::new(dt2, dt3, self.inst_number, 
             self.mdlt, self.pit, self.vol, self.exp);
         new_voice.start_sound();
         self.vcevec.push(new_voice);
@@ -81,7 +83,7 @@ impl msgf_inst::Inst for InstVa {
     fn all_sound_off(&mut self) {
         self.vcevec.iter_mut().for_each(|vce| vce.damp());
     }
-    fn release_note(&mut self, nt: &msgf_voice::Voice){
+/*    fn release_note(&mut self, nt: &va_voice::VoiceVa){
         let ntcmp = self.vcevec.iter_mut();
         for (i, vce) in ntcmp.enumerate() {
             if vce == nt {
@@ -90,7 +92,7 @@ impl msgf_inst::Inst for InstVa {
                 break;
             }
         }
-    }
+    }*/
     fn process(&mut self,
       abuf_l: &mut msgf_afrm::AudioFrame,
       abuf_r: &mut msgf_afrm::AudioFrame,
@@ -135,7 +137,7 @@ impl InstVa {
         if value == 127 {value = 128;}
         (value as f32)/128.0
     }
-    fn search_note(&mut self, note_num: u8, sts: NoteStatus) -> Option<&mut msgf_voice::Voice> {
+    fn search_note(&mut self, note_num: u8, sts: NoteStatus) -> Option<&mut va_voice::VoiceVa> {
         let max_note = self.vcevec.len();
         let mut return_num = max_note;
         for i in 0..max_note {
