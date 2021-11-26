@@ -85,14 +85,14 @@ impl Msgf {
         if MAX_PART_NUM > 1 {      //  Part 1 は copy
             let audio_buffer_l = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
             let audio_buffer_r = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
-            &self.part[0].process(audio_buffer_l, audio_buffer_r, in_number_frames as usize);
+            self.part[0].process(audio_buffer_l, audio_buffer_r, in_number_frames as usize);
             audio_buffer_l.copy_to_sysbuf(abuf_l);  // L
             audio_buffer_r.copy_to_sysbuf(abuf_r);  // R
         }
         for i in 1..MAX_PART_NUM { //  Part 2 以降は add
             let audio_buffer_l = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
             let audio_buffer_r = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
-            &self.part[i].process(audio_buffer_l, audio_buffer_r, in_number_frames as usize);
+            self.part[i].process(audio_buffer_l, audio_buffer_r, in_number_frames as usize);
             audio_buffer_l.add_to_sysbuf(abuf_l);  // L
             audio_buffer_r.add_to_sysbuf(abuf_r);  // R
         };
