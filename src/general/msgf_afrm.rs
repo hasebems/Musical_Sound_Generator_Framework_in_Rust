@@ -22,12 +22,18 @@ pub struct AudioFrame {
 //		Imprements
 //---------------------------------------------------------
 impl AudioFrame {
-    pub fn new(sample_number: usize) -> Self {
+    pub fn new(mut sample_number: usize, total_size: usize) -> Self {
+        if sample_number > total_size {
+            sample_number = total_size;
+        }
         Self {
-            abuf: vec![0.0; sample_number],
+            abuf: vec![0.0; total_size],
             sample_number,
             index: 0,
         }
+    }
+    pub fn set_sample_number(&mut self, snum: usize) {
+        self.sample_number = snum;      
     }
     pub fn copy_to_sysbuf(&self, ab: &mut [f32; msgf_if::MAX_BUFFER_SIZE]) {
         for i in 0..self.sample_number {
@@ -60,7 +66,7 @@ impl AudioFrame {
         };
         newval
     }
-    pub fn _clr_abuf(&mut self) {
+    pub fn clr_abuf(&mut self) {
         for i in 0..self.sample_number {
             self.abuf[i] = 0.0;
         }
@@ -77,7 +83,12 @@ impl AudioFrame {
         let newval = Self::limit_check(self.abuf[num]*rate, 0.0);
         self.abuf[num] = newval;
     }
-    pub fn get_abuf(&self, num: usize) -> f32 { self.abuf[num]}
+    pub fn get_abuf(&self, num: usize) -> Option<f32> {
+        if num >= self.sample_number {
+            return None;
+        }
+        Some(self.abuf[num])
+    }
     pub fn _get_max_level(&self) -> f32 {
         let mut max_val: f32 = 0.0;
         for i in 0..self.sample_number {
@@ -90,17 +101,20 @@ impl AudioFrame {
     }
     pub fn mul_and_mix(&mut self, srcbuf: &AudioFrame, mul_value:f32) {
         for i in 0..self.sample_number {
-            let val: f32 = srcbuf.get_abuf(i)*mul_value;
-            self.add_abuf(i, val);
+            if let Some(src_dt) = srcbuf.get_abuf(i) {
+                let val: f32 = src_dt*mul_value;
+                self.add_abuf(i, val);
+            }
         }
     }
     pub fn _mix_and_check_no_sound(&mut self, srcbuf: &AudioFrame) -> bool {
         let mut cnt: usize = 0;
         for i in 0..self.sample_number {
-            let val: f32 = srcbuf.get_abuf(i);
-            self.add_abuf(i, val);
-            if val < msgf_if::DAMP_LIMIT_DEPTH {
-                cnt += 1;
+            if let Some(val) = srcbuf.get_abuf(i) {
+                self.add_abuf(i, val);
+                if val < msgf_if::DAMP_LIMIT_DEPTH {
+                    cnt += 1;
+                }
             }
         }
         if cnt >= self.sample_number {

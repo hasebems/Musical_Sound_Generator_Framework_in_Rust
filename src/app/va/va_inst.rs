@@ -8,6 +8,7 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
+use crate::msgf_if;
 use crate::general::*;
 use crate::general::msgf_voice::*;
 use crate::app::va::*;
@@ -16,6 +17,7 @@ use crate::app::va::*;
 //		Definition
 //---------------------------------------------------------
 pub struct InstVa {
+    nt_audio: msgf_afrm::AudioFrame,
     vcevec: Vec<va_voice::VoiceVa>,
     inst_number: usize,
     mdlt: f32,  //  0.0..0.5
@@ -99,12 +101,12 @@ impl msgf_inst::Inst for InstVa {
       in_number_frames: usize) {
         let sz = self.vcevec.len();
         let mut ch_ended = vec![false; sz];
+        self.nt_audio.set_sample_number(in_number_frames as usize);
         for i in 0..sz {
             if let Some(nt) = self.vcevec.get_mut(i) {
-                let nt_audio = &mut msgf_afrm::AudioFrame::new(in_number_frames);
-                ch_ended[i] = nt.process(nt_audio, in_number_frames);
-                abuf_l.mul_and_mix(nt_audio, 1.0-self.pan);
-                abuf_r.mul_and_mix(nt_audio, self.pan);
+                ch_ended[i] = nt.process(&mut self.nt_audio, in_number_frames);
+                abuf_l.mul_and_mix(&mut self.nt_audio, 1.0-self.pan);
+                abuf_r.mul_and_mix(&mut self.nt_audio, self.pan);
             }
         }
         for i in 0..sz {
@@ -124,6 +126,7 @@ impl InstVa {
             inst_number = max_tone-1;
         }
         Self {
+            nt_audio: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
             vcevec: Vec::new(),
             inst_number,
             mdlt: va_prm::TONE_PRM[inst_number].osc.lfo_depth,

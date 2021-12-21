@@ -103,7 +103,7 @@ impl VoiceVa {
             vel,
             status: NoteStatus::DuringNoteOn,
             damp_counter: 0,
-            lvl_check_buf: msgf_afrm::AudioFrame::new((msgf_if::SAMPLING_FREQ/100.0) as usize),
+            lvl_check_buf: msgf_afrm::AudioFrame::new((msgf_if::SAMPLING_FREQ/100.0) as usize, msgf_if::MAX_BUFFER_SIZE),
             osc: msgf_osc::Osc::new(&va_prm::TONE_PRM[inst_set].osc, note, pmd, pit),
             aeg: msgf_aeg::Aeg::new(&va_prm::TONE_PRM[inst_set].aeg),
             lfo: msgf_lfo::Lfo::new(&va_prm::TONE_PRM[inst_set].lfo),

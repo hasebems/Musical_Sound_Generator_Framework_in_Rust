@@ -26,6 +26,8 @@ pub const DAMP_LIMIT_DEPTH: f32 = 0.0001;
 pub struct Msgf {
     msg_buf: Vec<(u8,usize,u8,u8)>,
     part: Vec<msgf_part::Part>,
+    audio_buffer_l: msgf_afrm::AudioFrame,
+    audio_buffer_r: msgf_afrm::AudioFrame,
     in_number_frames: u32,
 }
 //---------------------------------------------------------
@@ -36,6 +38,8 @@ impl Msgf {
         let mut msgf = Self {
             msg_buf: Vec::new(),
             part: Vec::new(),
+            audio_buffer_l: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
+            audio_buffer_r: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
             in_number_frames: 0,
         };
         for _ in 0..MAX_PART_NUM {
@@ -82,19 +86,17 @@ impl Msgf {
             println!("Audio Buffer: {}",in_number_frames);
             self.in_number_frames = in_number_frames;
         }
-        if MAX_PART_NUM > 1 {      //  Part 1 は copy
-            let audio_buffer_l = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
-            let audio_buffer_r = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
-            self.part[0].process(audio_buffer_l, audio_buffer_r, in_number_frames as usize);
-            audio_buffer_l.copy_to_sysbuf(abuf_l);  // L
-            audio_buffer_r.copy_to_sysbuf(abuf_r);  // R
+        self.audio_buffer_l.set_sample_number(in_number_frames as usize);
+        self.audio_buffer_r.set_sample_number(in_number_frames as usize);
+        if MAX_PART_NUM >= 1 {      //  Part 1 は copy
+            self.part[0].process(&mut self.audio_buffer_l, &mut self.audio_buffer_r, in_number_frames as usize);
+            self.audio_buffer_l.copy_to_sysbuf(abuf_l);  // L
+            self.audio_buffer_r.copy_to_sysbuf(abuf_r);  // R
         }
         for i in 1..MAX_PART_NUM { //  Part 2 以降は add
-            let audio_buffer_l = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
-            let audio_buffer_r = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
-            self.part[i].process(audio_buffer_l, audio_buffer_r, in_number_frames as usize);
-            audio_buffer_l.add_to_sysbuf(abuf_l);  // L
-            audio_buffer_r.add_to_sysbuf(abuf_r);  // R
+            self.part[i].process(&mut self.audio_buffer_l, &mut self.audio_buffer_r, in_number_frames as usize);
+            self.audio_buffer_l.add_to_sysbuf(abuf_l);  // L
+            self.audio_buffer_r.add_to_sysbuf(abuf_r);  // R
         };
     }
 }

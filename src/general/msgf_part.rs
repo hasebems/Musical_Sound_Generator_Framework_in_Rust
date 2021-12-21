@@ -15,6 +15,9 @@ use crate::general::*;
 //		Definition
 //---------------------------------------------------------
 pub struct Part {
+    audio_buffer_l: msgf_afrm::AudioFrame,
+    audio_buffer_r: msgf_afrm::AudioFrame,
+
     //	Part Latest Parameter Value
     cc0_msb: u8,
     cc1_modulation_wheel: u8,
@@ -42,6 +45,8 @@ impl Part {
     pub fn new() -> Self {
         let inst_instance = app::get_inst(0,100,64,127); //pgn,vol,pan,exp,
         Self {
+            audio_buffer_l: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
+            audio_buffer_r: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
             cc0_msb: 0,
             cc1_modulation_wheel: 0,
             cc5_portamento_time: 0,
@@ -131,11 +136,13 @@ impl Part {
                    abuf_l: &mut msgf_afrm::AudioFrame,
                    abuf_r: &mut msgf_afrm::AudioFrame,
                    in_number_frames: usize) {
-        let inst_audio_buffer_l = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
-        let inst_audio_buffer_r = &mut msgf_afrm::AudioFrame::new(in_number_frames as usize);
-        self.inst.process(inst_audio_buffer_l, inst_audio_buffer_r, in_number_frames);
+        self.audio_buffer_l.set_sample_number(in_number_frames as usize);
+        self.audio_buffer_l.clr_abuf();
+        self.audio_buffer_r.set_sample_number(in_number_frames as usize);
+        self.audio_buffer_r.clr_abuf();
+        self.inst.process(&mut self.audio_buffer_l, &mut self.audio_buffer_r, in_number_frames);
         // Part Volume, Part Pan, Effect 
-        inst_audio_buffer_l.copy_to_abuf(abuf_l);
-        inst_audio_buffer_r.copy_to_abuf(abuf_r);
+        self.audio_buffer_l.copy_to_abuf(abuf_l);
+        self.audio_buffer_r.copy_to_abuf(abuf_r);
     }
 }
