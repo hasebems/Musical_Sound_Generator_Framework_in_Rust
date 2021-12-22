@@ -11,11 +11,13 @@
 use crate::engine::msgf_osc::*;
 use crate::engine::msgf_aeg::*;
 use crate::engine::msgf_lfo::*;
+use crate::engine::msgf_delay::*;
 
 pub struct SynthParameter {
     pub osc: OscParameter,
     pub aeg: AegParameter,
     pub lfo: LfoParameter,
+    pub delay: DelayParameter,
 }
 
 pub const MAX_TONE_COUNT:usize = 3;
@@ -40,6 +42,11 @@ pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
             fadein_time: 0,     //  1: AUDIO_FRAME_PER_CONTROL / SAMPLING_FREQ (=3msec)
             delay_time: 0,      //    same as above
         },
+        delay: DelayParameter {
+            l_time: 0.5,    //  0.0 - 1.0 [sec]
+            r_time: 0.5,    //  0.0 - 1.0 [sec]
+            att_ratio: 0.2,     //  attenuation
+        },
     },
     SynthParameter {
         osc: OscParameter {
@@ -61,6 +68,11 @@ pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
             fadein_time: 0,
             delay_time: 0,
         },
+        delay: DelayParameter {
+            l_time: 0.5,
+            r_time: 0.5,
+            att_ratio: 0.2,
+        },
     },
     SynthParameter {
         osc: OscParameter {
@@ -81,6 +93,11 @@ pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
             direction: LfoDirection::LfoBoth,
             fadein_time: 300,
             delay_time: 600,
+        },
+        delay: DelayParameter {
+            l_time: 0.5,
+            r_time: 0.5,
+            att_ratio: 0.2,
         },
     },
 ];

@@ -11,14 +11,17 @@
 use crate::msgf_if;
 use crate::general::*;
 use crate::general::msgf_voice::*;
+use crate::engine::*;
 use crate::app::va::*;
 
 //---------------------------------------------------------
 //		Definition
 //---------------------------------------------------------
 pub struct InstVa {
-    nt_audio: msgf_afrm::AudioFrame,
+    vce_audio: msgf_afrm::AudioFrame,
+    inst_audio: msgf_afrm::AudioFrame,
     vcevec: Vec<va_voice::VoiceVa>,
+    delay: msgf_delay::Delay,
     inst_number: usize,
     mdlt: f32,  //  0.0..0.5
     pit: f32,   //  [cent]
@@ -101,14 +104,25 @@ impl msgf_inst::Inst for InstVa {
       in_number_frames: usize) {
         let sz = self.vcevec.len();
         let mut ch_ended = vec![false; sz];
-        self.nt_audio.set_sample_number(in_number_frames as usize);
+        self.vce_audio.set_sample_number(in_number_frames as usize);
+        self.inst_audio.set_sample_number(in_number_frames as usize);
+        self.inst_audio.clr_abuf();
+
+        //  All voices get together 
         for i in 0..sz {
             if let Some(nt) = self.vcevec.get_mut(i) {
-                ch_ended[i] = nt.process(&mut self.nt_audio, in_number_frames);
-                abuf_l.mul_and_mix(&mut self.nt_audio, 1.0-self.pan);
-                abuf_r.mul_and_mix(&mut self.nt_audio, self.pan);
+                ch_ended[i] = nt.process(&mut self.vce_audio, in_number_frames);
+                self.inst_audio.mul_and_mix(&mut self.vce_audio, 1.0);
             }
         }
+
+        //  make audio stereo
+        abuf_l.mul_and_mix(&mut self.inst_audio, 1.0-self.pan);
+        abuf_r.mul_and_mix(&mut self.inst_audio, self.pan);
+
+        //  with Effect
+        self.delay.process([abuf_l, abuf_r]);
+
         for i in 0..sz {
             if ch_ended[i] {
                 //  一つ消去したら、ループから抜ける
@@ -126,8 +140,10 @@ impl InstVa {
             inst_number = max_tone-1;
         }
         Self {
-            nt_audio: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
+            vce_audio: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
+            inst_audio: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
             vcevec: Vec::new(),
+            delay: msgf_delay::Delay::new(&va_prm::TONE_PRM[inst_number].delay),
             inst_number,
             mdlt: va_prm::TONE_PRM[inst_number].osc.lfo_depth,
             pit: 0.0,
