@@ -50,7 +50,7 @@ impl AudioFrame {
             ab.abuf[i] = self.abuf[i];
         }
     }
-    pub fn put_abuf(&mut self, val: f32) {
+    pub fn put_into_abuf(&mut self, val: f32) {
         self.abuf[self.index] = val;
         self.index += 1;
         if self.index >= self.sample_number {
@@ -75,7 +75,7 @@ impl AudioFrame {
         let newval = Self::limit_check(val, 0.0);
         self.abuf[num] = newval;
     }
-    pub fn add_abuf(&mut self, num: usize, val: f32) {
+    pub fn add_to_abuf(&mut self, num: usize, val: f32) {
         let newval = Self::limit_check(self.abuf[num], val);
         self.abuf[num] = newval;
     }
@@ -83,7 +83,7 @@ impl AudioFrame {
         let newval = Self::limit_check(self.abuf[num]*rate, 0.0);
         self.abuf[num] = newval;
     }
-    pub fn get_abuf(&self, num: usize) -> Option<f32> {
+    pub fn get_from_abuf(&self, num: usize) -> Option<f32> {
         if num >= self.sample_number {
             return None;
         }
@@ -101,17 +101,17 @@ impl AudioFrame {
     }
     pub fn mul_and_mix(&mut self, srcbuf: &AudioFrame, mul_value:f32) {
         for i in 0..self.sample_number {
-            if let Some(src_dt) = srcbuf.get_abuf(i) {
+            if let Some(src_dt) = srcbuf.get_from_abuf(i) {
                 let val: f32 = src_dt*mul_value;
-                self.add_abuf(i, val);
+                self.add_to_abuf(i, val);
             }
         }
     }
     pub fn _mix_and_check_no_sound(&mut self, srcbuf: &AudioFrame) -> bool {
         let mut cnt: usize = 0;
         for i in 0..self.sample_number {
-            if let Some(val) = srcbuf.get_abuf(i) {
-                self.add_abuf(i, val);
+            if let Some(val) = srcbuf.get_from_abuf(i) {
+                self.add_to_abuf(i, val);
                 if val < msgf_if::DAMP_LIMIT_DEPTH {
                     cnt += 1;
                 }

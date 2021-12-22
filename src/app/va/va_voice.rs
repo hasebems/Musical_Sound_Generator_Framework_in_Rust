@@ -121,7 +121,7 @@ impl VoiceVa {
         if self.status != NoteStatus::DuringDamp {
             //	Check Level
             let level = aegbuf.get_max_level();
-            self.lvl_check_buf.put_abuf(level);
+            self.lvl_check_buf.put_into_abuf(level);
             if msgf_if::DAMP_LIMIT_DEPTH > level {
                 println!("Damped!");
                 self.damp();
