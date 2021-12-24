@@ -43,9 +43,9 @@ pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
             delay_time: 0,      //    same as above
         },
         delay: DelayParameter {
-            l_time: 0.5,    //  0.0 - 1.0 [sec]
-            r_time: 0.5,    //  0.0 - 1.0 [sec]
-            att_ratio: 0.2,     //  attenuation
+            l_time: 0.5,        //  0.0 - 1.0 [sec]
+            r_time: 0.5,        //  0.0 - 1.0 [sec]
+            att_ratio: 0.4,     //  attenuation
         },
     },
     SynthParameter {
@@ -69,9 +69,9 @@ pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
             delay_time: 0,
         },
         delay: DelayParameter {
-            l_time: 0.5,
-            r_time: 0.5,
-            att_ratio: 0.2,
+            l_time: 0.6,
+            r_time: 0.4,
+            att_ratio: 0.5,
         },
     },
     SynthParameter {

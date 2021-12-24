@@ -8,6 +8,7 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
+use crate::msgf_if;
 use crate::general::*;
 
 //---------------------------------------------------------
@@ -60,6 +61,9 @@ impl Delay {
                     let mut crnt_dt: f32 = 0.0;
                     if let Some(output_dt) = self.delay_buffer[str].get_from_abuf(self.rd_ptr[str]) {
                         crnt_dt = input_dt + output_dt*self.prms.att_ratio;
+                        if crnt_dt < msgf_if::DAMP_LIMIT_DEPTH && -msgf_if::DAMP_LIMIT_DEPTH < crnt_dt {
+                            crnt_dt = 0.0;
+                        }
                         in_abuf[str].add_to_abuf(i, crnt_dt);
                     }
                     self.delay_buffer[str].set_abuf(self.wr_ptr[str], crnt_dt);

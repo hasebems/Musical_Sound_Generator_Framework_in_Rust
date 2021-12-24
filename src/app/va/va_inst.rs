@@ -42,6 +42,7 @@ impl msgf_inst::Inst for InstVa {
         if inst_number >= max_tone {
             inst_number = max_tone-1;
         }
+        self.delay = msgf_delay::Delay::new(&va_prm::TONE_PRM[inst_number].delay);
         self.inst_number = inst_number;
         self.mdlt = va_prm::TONE_PRM[inst_number].osc.lfo_depth;
         self.pit = 0.0;
