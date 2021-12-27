@@ -7,7 +7,7 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
-use crate::general::msgf_inst;
+use crate::core::msgf_inst;
 
 //  You can select a specific app.
 pub mod va;

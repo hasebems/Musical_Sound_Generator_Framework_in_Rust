@@ -8,7 +8,7 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
-use crate::general::*;
+use crate::core::*;
 
 pub trait Inst {
     fn change_inst(&mut self, inst_number: usize, vol: u8, pan: u8, exp: u8);

@@ -9,8 +9,8 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::msgf_if;
-use crate::general::*;
-use crate::general::msgf_voice::*;
+use crate::core::*;
+use crate::core::msgf_voice::*;
 use crate::engine::*;
 use crate::app::va::*;
 

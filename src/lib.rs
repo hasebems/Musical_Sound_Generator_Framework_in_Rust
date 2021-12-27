@@ -12,7 +12,7 @@
 //      cbindgen --config cbindgen.toml --crate msgf --output msgf.h --lang=c -q
 //      (-q: Report errors only )
 mod msgf_if;
-mod general;
+mod core;
 mod engine;
 mod app;
 

@@ -9,7 +9,7 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::msgf_if;
-use crate::general::*;
+use crate::core::*;
 
 //---------------------------------------------------------
 //		Synth. Parameter
