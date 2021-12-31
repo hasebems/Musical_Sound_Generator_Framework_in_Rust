@@ -21,6 +21,7 @@ pub trait Inst {
     fn pitch(&mut self, bend:i16, tune_coarse:u8, tune_fine:u8);
     fn sustain(&mut self, value: u8);
     fn all_sound_off(&mut self);
+    fn set_prm(&mut self, prm_type: u8, value: u8);
     //fn release_note(&mut self, nt: &msgf_voice::Voice);
     fn process(&mut self,
         abuf_l: &mut msgf_afrm::AudioFrame,

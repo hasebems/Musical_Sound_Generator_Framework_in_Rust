@@ -34,4 +34,5 @@ pub trait Voice {
     fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, in_number_frames: usize) -> bool;
     fn note_num(&self) -> u8;
     fn velocity(&self) -> u8;
+    fn set_prm(&mut self, prm_type: u8, value: u8);
 }
