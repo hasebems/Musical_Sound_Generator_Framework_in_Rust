@@ -34,6 +34,7 @@ pub struct Part {
     _cc126_mono: u8,
     program_number: u8,
     pitch_bend_value: i16,
+    cc16_31_change_vprm: [u8; 16],
 	
     //	Composite Object
 	inst: Box<dyn msgf_inst::Inst>,
@@ -62,6 +63,7 @@ impl Part {
             _cc126_mono: 1,
             program_number: 0,
             pitch_bend_value: 0,
+            cc16_31_change_vprm: [0; 16],
             inst: inst_instance,
         }
     }
@@ -110,6 +112,11 @@ impl Part {
                 if value == 0 {
                     self.inst.all_sound_off();
                 }
+            }
+            16..=31 => {
+                let vprm_num: u8 = controller-16;
+                self.cc16_31_change_vprm[vprm_num as usize] = value;
+                self.inst.set_prm(vprm_num, value);
             }
             _ => {}
         };

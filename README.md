@@ -16,6 +16,20 @@ This software is released under the MIT License, see LICENSE.txt.
 - rust_process() : Audio 信号を生成し、Audio Buffer を渡す処理です(左右2ch) generate stereo audio signal, and send audio buffer to system. 
 - rust_msgf_destroy() : インスタンスを解放します release an instance.
 
+## Receivable MIDI Data
+
+- Note On/Note Off
+- Control Change
+    - CC#1 : Modulation Wheel
+    - CC#7 : Channel Volume
+    - CC#10 : Pan
+    - CC#11 : Expression
+    - CC#12 : Note Shift
+    - CC#13 : Tune
+    - CC#16-31 : Instrument Parameter
+- Program Change Number
+- Pitch Bend
+
 ## Contents of each folder
 
 - /src : IF, configuration etc.
