@@ -89,6 +89,9 @@ impl msgf_inst::Inst for InstVa {
     fn all_sound_off(&mut self) {
         self.vcevec.iter_mut().for_each(|vce| vce.damp());
     }
+    fn set_prm(&mut self, prm_type: u8, value: u8) {
+        self.vcevec.iter_mut().for_each(|vce| vce.set_prm(prm_type, value));
+    }
 /*    fn release_note(&mut self, nt: &va_voice::VoiceVa){
         let ntcmp = self.vcevec.iter_mut();
         for (i, vce) in ntcmp.enumerate() {

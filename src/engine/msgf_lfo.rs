@@ -30,11 +30,11 @@ pub enum LfoWave {
     Sin,
 }
 pub struct LfoParameter {
-    pub freq: f32,
-    pub wave: LfoWave,
-    pub direction: LfoDirection,
-    pub fadein_time: u64,
-    pub delay_time: u64,
+    pub freq: f32,              // RTP, prm#0
+    pub wave: LfoWave,          // NKP, prm#1:bit 7-6
+    pub direction: LfoDirection,// NKP, prm#1:bit 2-0
+    pub fadein_time: u64,       // NKP, prm#2
+    pub delay_time: u64,        // NKP, prm#3
 }
 //---------------------------------------------------------
 //		Definition
@@ -55,12 +55,12 @@ pub struct Lfo {
 //---------------------------------------------------------
 impl Lfo {
     pub fn new(prms: &'static LfoParameter) -> Lfo {
-        let coef = Lfo::set_lfo(prms.wave, prms.direction);
+        let coef = Lfo::set_wave(prms.wave, prms.direction);
         Lfo {
             prms,
             next_phase: 0.0,
-            delta_phase: (prms.freq*(msgf_if::AUDIO_FRAME_PER_CONTROL as f32))/msgf_if::SAMPLING_FREQ,
-            direction: prms.direction,
+            delta_phase: Lfo::calc_freq(prms.freq),
+            direction: coef.4,
             x1: coef.0,
             x2: coef.1,
             y: coef.2,
@@ -68,7 +68,7 @@ impl Lfo {
             dac_counter: 0,
         }
     }
-    fn set_lfo(wv: LfoWave, _dir: LfoDirection) -> (f32, f32, f32, f32) {
+    pub fn set_wave(wv: LfoWave, dir: LfoDirection) -> (f32, f32, f32, f32, LfoDirection) {
         let (x1, x2, y, z): (f32, f32, f32, f32);
         match wv {
             LfoWave::Tri => {x1=0.5; x2=1.5; y=4.0; z=0.0;}
@@ -76,7 +76,13 @@ impl Lfo {
             LfoWave::Squ => {x1=0.5; x2=1.5; y=100000.0; z=0.0;}
             LfoWave::Sin => {x1=0.5; x2=1.5; y=2.0*msgf_if::PI; z=1.0/6.78;}
         };
-        (x1, x2, y, z)
+        (x1, x2, y, z, dir)
+    }
+    fn calc_freq(freq: f32) -> f32 {
+        freq*(msgf_if::AUDIO_FRAME_PER_CONTROL as f32)/msgf_if::SAMPLING_FREQ
+    }
+    pub fn set_freq(&mut self, value: u8) {
+        self.delta_phase = Lfo::calc_freq((value as f32)/10.0);
     }
     pub fn start(&mut self) {
         self.dac_counter = 0;

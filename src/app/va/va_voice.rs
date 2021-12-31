@@ -94,6 +94,14 @@ impl msgf_voice::Voice for VoiceVa {
         }
         self.manage_note_level(abuf, aegbuf)
     }
+    fn set_prm(&mut self, prm_type: u8, value: u8) {
+        match prm_type {
+            0 => {
+                self.lfo.set_freq(value);
+            }
+            _ => ()
+        }
+    }
 }
 
 impl VoiceVa {
