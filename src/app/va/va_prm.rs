@@ -13,6 +13,7 @@ use crate::engine::msgf_aeg::*;
 use crate::engine::msgf_lfo::*;
 use crate::engine::msgf_delay::*;
 
+#[derive(Copy, Clone)]
 pub struct SynthParameter {
     pub osc: OscParameter,
     pub aeg: AegParameter,

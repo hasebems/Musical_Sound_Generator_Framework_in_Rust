@@ -35,6 +35,7 @@ pub struct VoiceVa {
     lfo: msgf_lfo::Lfo,
     max_note_vol: f32,
     ended: bool,
+    //inst_prm: &'a va_prm::SynthParameter,
 }
 //---------------------------------------------------------
 //		Imprements
@@ -96,16 +97,16 @@ impl msgf_voice::Voice for VoiceVa {
     }
     fn set_prm(&mut self, prm_type: u8, value: u8) {
         match prm_type {
-            0 => {
-                self.lfo.set_freq(value);
-            }
+            0 => self.lfo.set_freq(value),
+            1 => self.lfo.set_wave(value),
             _ => ()
         }
     }
 }
 
 impl VoiceVa {
-    pub fn new(note:u8, vel:u8, inst_set:usize, pmd:f32, pit:f32, vol:u8, exp:u8) -> Self {
+    pub fn new(note:u8, vel:u8, inst_set:usize, pmd:f32, pit:f32, vol:u8, exp:u8,
+    /*inst_prm: &'a va_prm::SynthParameter*/) -> Self {
         Self {
             note,
             vel,
@@ -117,6 +118,7 @@ impl VoiceVa {
             lfo: msgf_lfo::Lfo::new(&va_prm::TONE_PRM[inst_set].lfo),
             max_note_vol: VoiceVa::calc_vol(vol, exp),
             ended: false,
+            //inst_prm,
         }
     }
     fn calc_vol(vol:u8, exp:u8) -> f32 {

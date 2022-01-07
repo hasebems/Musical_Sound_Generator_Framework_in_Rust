@@ -22,6 +22,7 @@ pub enum WvType {
     Square,
     Pulse,
 }
+#[derive(Copy, Clone)]
 pub struct OscParameter {
     pub coarse_tune: i32,   //  [semitone]
     pub fine_tune: f32,     //  [cent]

@@ -29,6 +29,7 @@ pub enum LfoWave {
     Squ,
     Sin,
 }
+#[derive(Copy, Clone)]
 pub struct LfoParameter {
     pub freq: f32,              // RTP, prm#0
     pub wave: LfoWave,          // NKP, prm#1:bit 7-6
@@ -55,7 +56,7 @@ pub struct Lfo {
 //---------------------------------------------------------
 impl Lfo {
     pub fn new(prms: &'static LfoParameter) -> Lfo {
-        let coef = Lfo::set_wave(prms.wave, prms.direction);
+        let coef = Lfo::calc_wave(prms.wave, prms.direction);
         Lfo {
             prms,
             next_phase: 0.0,
@@ -68,7 +69,7 @@ impl Lfo {
             dac_counter: 0,
         }
     }
-    pub fn set_wave(wv: LfoWave, dir: LfoDirection) -> (f32, f32, f32, f32, LfoDirection) {
+    fn calc_wave(wv: LfoWave, dir: LfoDirection) -> (f32, f32, f32, f32, LfoDirection) {
         let (x1, x2, y, z): (f32, f32, f32, f32);
         match wv {
             LfoWave::Tri => {x1=0.5; x2=1.5; y=4.0; z=0.0;}
@@ -80,6 +81,31 @@ impl Lfo {
     }
     fn calc_freq(freq: f32) -> f32 {
         freq*(msgf_if::AUDIO_FRAME_PER_CONTROL as f32)/msgf_if::SAMPLING_FREQ
+    }
+    pub fn set_wave(&mut self, value: u8) {
+        let dir_num: u8 = value&0x30;
+        let dir: LfoDirection;
+        match dir_num {
+            0 => dir = LfoDirection::LfoBoth,
+            1 => dir = LfoDirection::LfoUpper,
+            2 => dir = LfoDirection::LfoLower,
+            _ => dir = LfoDirection::LfoBoth,
+        }
+        let wv_num: u8 = value&0x60;
+        let wv: LfoWave;
+        match wv_num {
+            0x00 => wv = LfoWave::Tri,
+            0x20 => wv = LfoWave::Saw,
+            0x40 => wv = LfoWave::Squ,
+            0x60 => wv = LfoWave::Sin,
+            _ => wv = LfoWave::Sin,
+        }
+        let coef = Lfo::calc_wave(wv, dir);
+        self.direction = coef.4;
+        self.x1 = coef.0;
+        self.x2 = coef.1;
+        self.y =  coef.2;
+        self.z = coef.3;
     }
     pub fn set_freq(&mut self, value: u8) {
         self.delta_phase = Lfo::calc_freq((value as f32)/10.0);

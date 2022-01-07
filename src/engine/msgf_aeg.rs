@@ -13,6 +13,7 @@ use crate::core::*;
 //---------------------------------------------------------
 //		Synth. Parameter
 //---------------------------------------------------------
+#[derive(Copy, Clone)]
 pub struct AegParameter {
     pub attack_rate: f32,
     pub decay_rate: f32,

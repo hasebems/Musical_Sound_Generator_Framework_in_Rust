@@ -28,6 +28,7 @@ pub struct InstVa {
     vol: u8,    //  0..127
     pan: f32,   //  -1..0..+1
     exp: u8,    //  0..127
+    //inst_prm: va_prm::SynthParameter,
 }
 //---------------------------------------------------------
 //		Imprements
@@ -57,8 +58,10 @@ impl msgf_inst::Inst for InstVa {
         }
     }
     fn note_on(&mut self, dt2: u8, dt3: u8) {
-        let mut new_voice = va_voice::VoiceVa::new(dt2, dt3, self.inst_number, 
-            self.mdlt, self.pit, self.vol, self.exp);
+        let mut new_voice = va_voice::VoiceVa::new(
+            dt2, dt3, self.inst_number, self.mdlt, self.pit, self.vol, self.exp//,
+            //&self.inst_prm
+        );
         new_voice.start_sound();
         self.vcevec.push(new_voice);
     }
@@ -154,6 +157,7 @@ impl InstVa {
             vol,
             pan: Self::calc_pan(pan),
             exp,
+            //inst_prm: va_prm::TONE_PRM[inst_number],
         }
     }
     fn calc_pan(mut value:u8) -> f32 {
