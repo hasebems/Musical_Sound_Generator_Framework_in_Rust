@@ -41,7 +41,7 @@ pub struct LfoParameter {
 //		Definition
 //---------------------------------------------------------
 pub struct Lfo {
-    prms: &'static LfoParameter,
+    prms: LfoParameter,
     next_phase: f32,
     delta_phase: f32,
     direction: LfoDirection,
@@ -55,12 +55,12 @@ pub struct Lfo {
 //		Imprements
 //---------------------------------------------------------
 impl Lfo {
-    pub fn new(prms: &'static LfoParameter) -> Lfo {
-        let coef = Lfo::calc_wave(prms.wave, prms.direction);
+    pub fn new(ref_prms: &LfoParameter) -> Lfo {
+        let coef = Lfo::calc_wave(ref_prms.wave, ref_prms.direction);
         Lfo {
-            prms,
+            prms: *ref_prms,
             next_phase: 0.0,
-            delta_phase: Lfo::calc_freq(prms.freq),
+            delta_phase: Lfo::calc_freq(ref_prms.freq),
             direction: coef.4,
             x1: coef.0,
             x2: coef.1,

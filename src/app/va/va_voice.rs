@@ -8,6 +8,8 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
+use std::rc::Rc;
+use std::cell::RefCell;
 use crate::msgf_if;
 use crate::core::*;
 use crate::core::msgf_voice::*;
@@ -35,7 +37,6 @@ pub struct VoiceVa {
     lfo: msgf_lfo::Lfo,
     max_note_vol: f32,
     ended: bool,
-    //inst_prm: &'a va_prm::SynthParameter,
 }
 //---------------------------------------------------------
 //		Imprements
@@ -105,20 +106,20 @@ impl msgf_voice::Voice for VoiceVa {
 }
 
 impl VoiceVa {
-    pub fn new(note:u8, vel:u8, inst_set:usize, pmd:f32, pit:f32, vol:u8, exp:u8,
-    /*inst_prm: &'a va_prm::SynthParameter*/) -> Self {
+    pub fn new(note:u8, vel:u8, pmd:f32, pit:f32, vol:u8, exp:u8,
+        inst_prm: Rc<RefCell<va_prm::SynthParameter>>) -> Self {
+        let tprm: &va_prm::SynthParameter = &inst_prm.borrow();
         Self {
             note,
             vel,
             status: NoteStatus::DuringNoteOn,
             damp_counter: 0,
             lvl_check_buf: msgf_afrm::AudioFrame::new((msgf_if::SAMPLING_FREQ/100.0) as usize, msgf_if::MAX_BUFFER_SIZE),
-            osc: msgf_osc::Osc::new(&va_prm::TONE_PRM[inst_set].osc, note, pmd, pit),
-            aeg: msgf_aeg::Aeg::new(&va_prm::TONE_PRM[inst_set].aeg),
-            lfo: msgf_lfo::Lfo::new(&va_prm::TONE_PRM[inst_set].lfo),
+            osc: msgf_osc::Osc::new(&tprm.osc, note, pmd, pit),
+            aeg: msgf_aeg::Aeg::new(&tprm.aeg),
+            lfo: msgf_lfo::Lfo::new(&tprm.lfo),
             max_note_vol: VoiceVa::calc_vol(vol, exp),
             ended: false,
-            //inst_prm,
         }
     }
     fn calc_vol(vol:u8, exp:u8) -> f32 {

@@ -15,7 +15,7 @@ use crate::core::*;
 //		Synth. Parameter
 //---------------------------------------------------------
 #[allow(dead_code)]
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum WvType {
     Sine,
     Saw,
@@ -90,7 +90,7 @@ pub struct Osc {
 //		Imprements
 //---------------------------------------------------------
 impl Osc {
-    pub fn new(prms:&'static OscParameter, note:u8, pmd:f32, cnt_pitch:f32) -> Osc {
+    pub fn new(prms:&OscParameter, note:u8, pmd:f32, cnt_pitch:f32) -> Osc {
         Osc {
             //prms,
             base_pitch: Osc::calc_base_pitch(prms, note),

@@ -34,7 +34,7 @@ pub enum EgState {
     _Damp,
 }
 pub struct Aeg {
-    prms: &'static AegParameter,
+    prms: AegParameter,
     state: EgState,
     tgt_value: f32,
     src_value: f32,
@@ -47,9 +47,9 @@ pub struct Aeg {
 //		Imprements
 //---------------------------------------------------------
 impl Aeg {
-    pub fn new(prms: &'static AegParameter) -> Aeg {
+    pub fn new(ref_prms: &AegParameter) -> Aeg {
         Aeg {
-            prms,
+            prms: *ref_prms,
             state: EgState::NotYet,
             tgt_value: 0.0,
             src_value: 0.0,
