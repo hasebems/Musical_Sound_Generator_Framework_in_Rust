@@ -9,7 +9,7 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::Cell;
 use crate::msgf_if;
 use crate::core::*;
 use crate::core::msgf_voice::*;
@@ -30,7 +30,7 @@ pub struct InstVa {
     vol: u8,    //  0..127
     pan: f32,   //  -1..0..+1
     exp: u8,    //  0..127
-    inst_prm: Rc<RefCell<va_prm::SynthParameter>>,
+    inst_prm: Rc<Cell<va_prm::SynthParameter>>,
 }
 //---------------------------------------------------------
 //		Imprements
@@ -45,14 +45,14 @@ impl msgf_inst::Inst for InstVa {
         if inst_number >= max_tone {
             inst_number = max_tone-1;
         }
-        self.delay = msgf_delay::Delay::new(&va_prm::TONE_PRM[inst_number].delay);
+        let _ = &self.inst_prm.replace(va_prm::TONE_PRM[inst_number]);
+        self.delay = msgf_delay::Delay::new(self.inst_prm.get().delay);
         self.inst_number = inst_number;
-        self.mdlt = va_prm::TONE_PRM[inst_number].osc.lfo_depth;
+        self.mdlt = self.inst_prm.get().osc.lfo_depth;
         self.pit = 0.0;
         self.vol = vol;
         self.pan = Self::calc_pan(pan);
         self.exp = exp;
-        let _ = &self.inst_prm.replace(va_prm::TONE_PRM[inst_number]);
     }
     fn note_off(&mut self, dt2: u8, _dt3: u8) {
         let nt_opt = self.search_note(dt2, NoteStatus::DuringNoteOn);
@@ -62,8 +62,7 @@ impl msgf_inst::Inst for InstVa {
     }
     fn note_on(&mut self, dt2: u8, dt3: u8) {
         let mut new_voice = va_voice::VoiceVa::new(
-            dt2, dt3, self.mdlt, self.pit, self.vol, self.exp,
-            Rc::clone(&self.inst_prm)
+            dt2, dt3, self.mdlt, self.pit, self.vol, self.exp, Rc::clone(&self.inst_prm)
         );
         new_voice.start_sound();
         self.vcevec.push(new_voice);
@@ -149,18 +148,19 @@ impl InstVa {
         if inst_number >= max_tone {
             inst_number = max_tone-1;
         }
+        let prm = Rc::new(Cell::new(va_prm::TONE_PRM[inst_number]));
         Self {
             vce_audio: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
             inst_audio: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
             vcevec: Vec::new(),
-            delay: msgf_delay::Delay::new(&va_prm::TONE_PRM[inst_number].delay),
+            delay: msgf_delay::Delay::new(prm.get().delay),
             inst_number,
-            mdlt: va_prm::TONE_PRM[inst_number].osc.lfo_depth,
+            mdlt: prm.get().osc.lfo_depth,
             pit: 0.0,
             vol,
             pan: Self::calc_pan(pan),
             exp,
-            inst_prm: Rc::new(RefCell::new(va_prm::TONE_PRM[inst_number])),
+            inst_prm: prm,
         }
     }
     fn calc_pan(mut value:u8) -> f32 {

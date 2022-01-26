@@ -24,7 +24,7 @@ pub struct DelayParameter {
 //		Definition
 //---------------------------------------------------------
 pub struct Delay {
-    prms: &'static DelayParameter,
+    prms: DelayParameter,
     delay_buffer: [msgf_afrm::AudioFrame; 2],
     rd_ptr: [usize;2],
     wr_ptr: [usize;2],
@@ -34,7 +34,7 @@ pub struct Delay {
 //---------------------------------------------------------
 impl Delay {
 
-    pub fn new(prms: &'static DelayParameter) -> Self {
+    pub fn new(prms: DelayParameter) -> Self {
         Delay {
             prms,
             delay_buffer: 

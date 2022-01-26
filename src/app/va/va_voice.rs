@@ -9,7 +9,7 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::Cell;
 use crate::msgf_if;
 use crate::core::*;
 use crate::core::msgf_voice::*;
@@ -107,8 +107,8 @@ impl msgf_voice::Voice for VoiceVa {
 
 impl VoiceVa {
     pub fn new(note:u8, vel:u8, pmd:f32, pit:f32, vol:u8, exp:u8,
-        inst_prm: Rc<RefCell<va_prm::SynthParameter>>) -> Self {
-        let tprm: &va_prm::SynthParameter = &inst_prm.borrow();
+        inst_prm: Rc<Cell<va_prm::SynthParameter>>) -> Self {
+        let tprm: &va_prm::SynthParameter = &inst_prm.get();
         Self {
             note,
             vel,
