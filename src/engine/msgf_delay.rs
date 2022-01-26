@@ -34,14 +34,14 @@ pub struct Delay {
 //---------------------------------------------------------
 impl Delay {
 
-    pub fn new(prms: DelayParameter) -> Self {
+    pub fn new(ref_prms: &DelayParameter) -> Self {
         Delay {
-            prms,
+            prms: *ref_prms,
             delay_buffer: 
                 [msgf_afrm::AudioFrame::new(44100,44100),
                 msgf_afrm::AudioFrame::new(44100,44100)],  // 1[sec]
             rd_ptr: [0,0],
-            wr_ptr: [(prms.l_time*44100.0) as usize, (prms.r_time*44100.0) as usize],
+            wr_ptr: [(ref_prms.l_time*44100.0) as usize, (ref_prms.r_time*44100.0) as usize],
         }
     }
     fn inc_ptr(&mut self, str: usize) {
