@@ -79,12 +79,11 @@ const SIN_TABLE: [f32; 261] = //   index should be used by adding 2.
 //		Definition
 //---------------------------------------------------------
 pub struct Osc {
-    //prms: &'static OscParameter,
+    lfo_depth: f32,
+    wv_type: WvType,
     base_pitch: f32,    //  [Hz]
     cnt_ratio: f32,     //  ratio of Hz
     next_phase: f32,    //  0.0 - 1.0
-    lfo_depth: f32,
-    wv_type: WvType,
 }
 //---------------------------------------------------------
 //		Imprements
@@ -92,12 +91,11 @@ pub struct Osc {
 impl Osc {
     pub fn new(prms:&OscParameter, note:u8, pmd:f32, cnt_pitch:f32) -> Osc {
         Osc {
-            //prms,
+            lfo_depth: pmd,
+            wv_type: prms.wv_type,
             base_pitch: Osc::calc_base_pitch(prms, note),
             cnt_ratio: Osc::calc_cnt_pitch(cnt_pitch),
             next_phase: 0.0,
-            lfo_depth: pmd,
-            wv_type: prms.wv_type,
         }
     }
     pub fn change_pmd(&mut self, value:f32) {self.lfo_depth = value;}

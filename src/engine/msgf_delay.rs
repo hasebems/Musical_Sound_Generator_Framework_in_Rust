@@ -24,7 +24,7 @@ pub struct DelayParameter {
 //		Definition
 //---------------------------------------------------------
 pub struct Delay {
-    prms: DelayParameter,
+    att_ratio: f32,
     delay_buffer: [msgf_afrm::AudioFrame; 2],
     rd_ptr: [usize;2],
     wr_ptr: [usize;2],
@@ -36,7 +36,7 @@ impl Delay {
 
     pub fn new(ref_prms: &DelayParameter) -> Self {
         Delay {
-            prms: *ref_prms,
+            att_ratio: ref_prms.att_ratio,
             delay_buffer: 
                 [msgf_afrm::AudioFrame::new(44100,44100),
                 msgf_afrm::AudioFrame::new(44100,44100)],  // 1[sec]
@@ -61,7 +61,7 @@ impl Delay {
                 if let Some(input_dt) = in_abuf[str].get_from_abuf(i)  {
                     let mut crnt_dt: f32 = 0.0;
                     if let Some(output_dt) = self.delay_buffer[str].get_from_abuf(self.rd_ptr[str]) {
-                        crnt_dt = input_dt + output_dt*self.prms.att_ratio;
+                        crnt_dt = input_dt + output_dt*self.att_ratio;
                         if crnt_dt < msgf_if::DAMP_LIMIT_DEPTH && -msgf_if::DAMP_LIMIT_DEPTH < crnt_dt {
                             crnt_dt = 0.0;
                         }

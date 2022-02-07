@@ -41,7 +41,8 @@ pub struct LfoParameter {
 //		Definition
 //---------------------------------------------------------
 pub struct Lfo {
-    prms: LfoParameter,
+    fadein_time: u64,
+    delay_time: u64,
     next_phase: f32,
     delta_phase: f32,
     direction: LfoDirection,
@@ -58,7 +59,8 @@ impl Lfo {
     pub fn new(ref_prms: &LfoParameter) -> Lfo {
         let coef = Lfo::calc_wave(ref_prms.wave, ref_prms.direction);
         Lfo {
-            prms: *ref_prms,
+            fadein_time: ref_prms.fadein_time,
+            delay_time: ref_prms.delay_time,
             next_phase: 0.0,
             delta_phase: Lfo::calc_freq(ref_prms.freq),
             direction: coef.4,
@@ -140,11 +142,11 @@ impl Lfo {
             //	Fadein, Delay
             let mut lvl = 1.0;
             let mut ofs = 0.0;
-            if self.dac_counter < self.prms.fadein_time {
+            if self.dac_counter < self.fadein_time {
                 lvl = 0.0;
-            } else if self.dac_counter < self.prms.fadein_time+self.prms.delay_time {
-                let tm = (self.dac_counter-self.prms.fadein_time) as f32;
-                lvl = tm/(self.prms.delay_time as f32);
+            } else if self.dac_counter < self.fadein_time+self.delay_time {
+                let tm = (self.dac_counter-self.fadein_time) as f32;
+                lvl = tm/(self.delay_time as f32);
             }
         
             //	Direction
