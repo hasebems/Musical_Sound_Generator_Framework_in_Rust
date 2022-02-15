@@ -21,7 +21,7 @@ pub struct SynthParameter {
     pub delay: DelayParameter,
 }
 
-pub const MAX_TONE_COUNT:usize = 3;
+pub const MAX_TONE_COUNT:usize = 4;
 pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
     SynthParameter {
         osc: OscParameter {
@@ -37,11 +37,11 @@ pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
             release_rate: 0.01, //  0.0-1.0
         },
         lfo: LfoParameter {
-            freq: 5.0,          //  [Hz]
+            freq: 6.0,          //  [Hz]
             wave: LfoWave::Tri,
             direction: LfoDirection::LfoBoth,
-            fadein_time: 0,     //  1: AUDIO_FRAME_PER_CONTROL / SAMPLING_FREQ (=3msec)
-            delay_time: 0,      //    same as above
+            fadein_time: 100,   //  1: AUDIO_FRAME_PER_CONTROL / SAMPLING_FREQ (=3msec)
+            delay_time: 100,    //    same as above
         },
         delay: DelayParameter {
             l_time: 0.5,        //  0.0 - 1.0 [sec]
@@ -66,13 +66,13 @@ pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
             freq: 5.0,
             wave: LfoWave::Tri,
             direction: LfoDirection::LfoBoth,
-            fadein_time: 0,
-            delay_time: 0,
+            fadein_time: 200,
+            delay_time: 200,
         },
         delay: DelayParameter {
             l_time: 0.6,
             r_time: 0.4,
-            att_ratio: 0.5,
+            att_ratio: 0.3,
         },
     },
     SynthParameter {
@@ -89,15 +89,41 @@ pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
             release_rate: 0.1,
         },
         lfo: LfoParameter {
-            freq: 5.0,
+            freq: 4.5,
             wave: LfoWave::Tri,
             direction: LfoDirection::LfoBoth,
             fadein_time: 300,
-            delay_time: 600,
+            delay_time: 300,
         },
         delay: DelayParameter {
             l_time: 0.5,
             r_time: 0.5,
+            att_ratio: 0.2,
+        },
+    },
+    SynthParameter {
+        osc: OscParameter {
+            coarse_tune: -12,
+            fine_tune: 0.0,
+            lfo_depth: 0.04,
+            wv_type: WvType::Saw,
+        },
+        aeg: AegParameter {
+            attack_rate: 0.5,
+            decay_rate: 0.01,
+            sustain_level: 0.5,
+            release_rate: 0.1,
+        },
+        lfo: LfoParameter {
+            freq: 4.0,
+            wave: LfoWave::Tri,
+            direction: LfoDirection::LfoBoth,
+            fadein_time: 100,
+            delay_time: 200,
+        },
+        delay: DelayParameter {
+            l_time: 0.8,
+            r_time: 0.7,
             att_ratio: 0.2,
         },
     },
