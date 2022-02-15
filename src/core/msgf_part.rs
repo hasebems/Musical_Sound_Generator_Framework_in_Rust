@@ -137,6 +137,7 @@ impl Part {
     }
     pub fn pitch_bend(&mut self, bend: i16) {
         self.pitch_bend_value = bend;
+        println!("Pitch Bend: {}",bend);
         self.inst.pitch(bend,self.cc12_note_shift,self.cc13_tune);
     }
     pub fn process(&mut self,
