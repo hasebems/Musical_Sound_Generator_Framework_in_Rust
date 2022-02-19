@@ -106,7 +106,7 @@ pub const TONE_PRM: [SynthParameter; MAX_TONE_COUNT] = [
             coarse_tune: -12,
             fine_tune: 0.0,
             lfo_depth: 0.04,
-            wv_type: WvType::Saw,
+            wv_type: WvType::Pulse,
         },
         aeg: AegParameter {
             attack_rate: 0.5,

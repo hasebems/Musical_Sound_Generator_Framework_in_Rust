@@ -29,6 +29,7 @@ pub struct OscParameter {
     pub lfo_depth: f32,     //  1.0 means +-1oct.
     pub wv_type: WvType,
 }
+type WvFn = fn(f32, usize) -> f32;
 //---------------------------------------------------------
 //		Constants
 //---------------------------------------------------------
@@ -145,29 +146,28 @@ impl Osc {
     pub fn change_pitch(&mut self, cnt_pitch:f32) {
         self.cnt_ratio = Osc::calc_cnt_pitch(cnt_pitch);
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {
-        let wave_func: fn(f32, usize) -> f32;
+    fn get_wave_func(&self) -> WvFn {
         match self.wv_type {
             WvType::Sine => {
                 //wave_func = |x, _y| {
                 //  let phase = x * 2.0 * msgf_if::PI;
                 //  phase.sin()
                 //}
-                wave_func = |x, _y| Osc::pseudo_sine(x);
+                return |x, _y| Osc::pseudo_sine(x);
             }
             WvType::Saw => {
-                wave_func = |x, y| {
+                return |x, y| {
                     let mut saw: f32 = 0.0;
                     for j in 1..y {
                         let ot:f32 = j as f32;
                         let phase:f32 = x * ot;
-                        saw += 0.25*Osc::pseudo_sine(phase)/ot;
+                        saw += 0.1*Osc::pseudo_sine(phase)/ot;
                     }
                     saw
                 };
             }
             WvType::Square => {
-                wave_func = |x, y| {
+                return |x, y| {
                     let mut sq: f32 = 0.0;
                     for j in (1..y).step_by(2) {
                         let ot:f32 = j as f32;
@@ -178,18 +178,34 @@ impl Osc {
                 };
             }
             WvType::Pulse => {
-                wave_func = |x, _y| {
-                    let mut pls: f32 = 0.0;
-                    let ps: f32 = x;
-                    if ps < 0.1 { pls = 0.5;}
-                    else if ps < 0.2 { pls = -0.5;}
+                return |x, y| {  // Pulse wave of duty 0.1
+                    let an: [f32; 33] = [0.1,
+                    0.196726329,0.187097857,0.171678738,0.151365346,
+                    0.127323954,0.10091023,0.073576602,0.046774464,
+                    0.021858481,0.0,-0.017884212,-0.031182976,
+                    -0.03961817,-0.043247242,-0.042441318,-0.037841336,
+                    -0.030296248,-0.020788651,-0.010354017,0.0,
+                    0.00936792,0.017008896,0.022392879,0.025227558,
+                    0.025464791,0.023286976,0.019075415,0.013364133,
+                    0.006783667,0.0,-0.006346011,-0.011693616];
+                    let mut pls: f32 = 0.1;
+                    let mut oti = y;
+                    if oti > 32 {oti = 32;}
+                    for j in 1..oti {
+                        let ot:f32 = j as f32;
+                        let phase:f32 = x * ot;
+                        pls += 0.5*an[j]*Osc::pseudo_sine(phase);
+                    }
                     pls
                 }
             }
         }
+    }
+    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {
         let delta_phase = self.base_pitch*self.cnt_ratio/msgf_if::SAMPLING_FREQ;
         let mut phase = self.next_phase;
         let max_overtone: usize = (ABORT_FREQUENCY/self.base_pitch) as usize;
+        let wave_func: WvFn = self.get_wave_func();
         for i in 0..abuf.sample_number {
             abuf.set_abuf(i, wave_func(phase, max_overtone));
             let magnitude = lbuf.ctrl_for_audio(i)*self.lfo_depth;
