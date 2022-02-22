@@ -40,6 +40,28 @@ impl Drop for InstVa {
 }
 //---------------------------------------------------------
 impl msgf_inst::Inst for InstVa {
+
+    fn new(inst_number: usize, vol: u8, pan: u8, exp: u8) -> Self {
+        let max_tone = va_prm::MAX_TONE_COUNT;
+        let mut inst_num = inst_number;
+        if inst_number >= max_tone {
+            inst_num = max_tone-1;
+        }
+        let prm = Rc::new(Cell::new(va_prm::TONE_PRM[inst_number]));
+        Self {
+            vce_audio: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
+            inst_audio: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
+            vcevec: Vec::new(),
+            delay: msgf_delay::Delay::new(&prm.get().delay),
+            inst_number: inst_num,
+            mdlt: prm.get().osc.lfo_depth,
+            pit: 0.0,
+            vol,
+            pan: Self::calc_pan(pan),
+            exp,
+            inst_prm: prm,
+        }
+    }
     fn change_inst(&mut self, mut inst_number: usize, vol: u8, pan: u8, exp: u8) {
         let max_tone = va_prm::MAX_TONE_COUNT;
         if inst_number >= max_tone {
@@ -143,6 +165,7 @@ impl msgf_inst::Inst for InstVa {
 }
 
 impl InstVa {
+/*
     pub fn new(mut inst_number: usize, vol: u8, pan: u8, exp: u8) -> Self {
         let max_tone = va_prm::MAX_TONE_COUNT;
         if inst_number >= max_tone {
@@ -163,6 +186,7 @@ impl InstVa {
             inst_prm: prm,
         }
     }
+*/
     fn calc_pan(mut value:u8) -> f32 {
         if value == 127 {value = 128;}
         (value as f32)/128.0

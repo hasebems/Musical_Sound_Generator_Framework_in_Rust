@@ -10,14 +10,13 @@
 //
 use crate::*;
 use crate::core::*;
+use crate::core::msgf_inst::*;
+use crate::app::InstComposite;
 
 //---------------------------------------------------------
 //		Definition
 //---------------------------------------------------------
 pub struct Part {
-    audio_buffer_l: msgf_afrm::AudioFrame,
-    audio_buffer_r: msgf_afrm::AudioFrame,
-
     //	Part Latest Parameter Value
     cc0_msb: u8,
     cc1_modulation_wheel: u8,
@@ -37,17 +36,14 @@ pub struct Part {
     cc16_31_change_vprm: [u8; 16],
 	
     //	Composite Object
-	inst: Box<dyn msgf_inst::Inst>,
+    inst_comp: InstComposite,
 }
 //---------------------------------------------------------
 //		Imprements
 //---------------------------------------------------------
 impl Part {
     pub fn new() -> Self {
-        let inst_instance = app::get_inst(0,100,64,127); //pgn,vol,pan,exp,
         Self {
-            audio_buffer_l: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
-            audio_buffer_r: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
             cc0_msb: 0,
             cc1_modulation_wheel: 0,
             cc5_portamento_time: 0,
@@ -64,59 +60,66 @@ impl Part {
             program_number: 0,
             pitch_bend_value: 0,
             cc16_31_change_vprm: [0; 16],
-            inst: inst_instance,
+            inst_comp: InstComposite::new(100,64,127),
         }
     }
+    fn get_inst(&mut self) -> &mut impl Inst {
+        self.inst_comp.get_inst()
+    }
     pub fn note_off(&mut self, dt2: u8, dt3: u8) {
-        self.inst.note_off(dt2, dt3);
+        self.get_inst().note_off(dt2, dt3);
     }
     pub fn note_on(&mut self, dt2: u8, dt3: u8) {
-        self.inst.note_on(dt2, dt3);
+        self.get_inst().note_on(dt2, dt3);
     }
     pub fn control_change(&mut self, controller: u8, value: u8) {
         match controller {
             0 => self.cc0_msb = value,
             1 => {
                 self.cc1_modulation_wheel = value;
-                self.inst.modulation(value);
+                self.get_inst().modulation(value);
             }
             5 => self.cc5_portamento_time = value,
             7 => {
                 self.cc7_volume = value;
-                self.inst.volume(value);
+                self.get_inst().volume(value);
             }
             10 => {
                 self.cc10_pan = value;
-                self.inst.pan(value);
+                self.get_inst().pan(value);
             }
             11 => {
                 self.cc11_expression = value;
-                self.inst.expression(value);
+                self.get_inst().expression(value);
             }
             12 => {
                 self.cc12_note_shift = value;
-                self.inst.pitch(self.pitch_bend_value,value,self.cc13_tune);
+                let pb = self.pitch_bend_value;
+                let tn = self.cc13_tune;
+                self.get_inst().pitch(pb, value, tn);
             }
             13 => {
                 self.cc13_tune = value;
-                self.inst.pitch(self.pitch_bend_value,self.cc12_note_shift,value);
+                let pb = self.pitch_bend_value;
+                let ns = self.cc12_note_shift;
+                self.get_inst().pitch(pb, ns, value);
             }
             32 => self.cc32_lsb = value,
             64 => {
                 self.cc64_sustain = value;
-                self.inst.sustain(value);
+                self.get_inst().sustain(value);
             }
             65 => self.cc65_portamento = value,
             66 => self.cc66_sostenuto = value,
             120 => {
                 if value == 0 {
-                    self.inst.all_sound_off();
+                    self.get_inst().all_sound_off();
                 }
             }
             16..=31 => {
                 let vprm_num: u8 = controller-16;
                 self.cc16_31_change_vprm[vprm_num as usize] = value;
-                self.inst.set_prm(vprm_num, value);
+                self.get_inst().set_prm(vprm_num, value);
             }
             _ => {}
         };
@@ -124,33 +127,37 @@ impl Part {
     }
     pub fn program_change(&mut self, dt2: u8) {
         self.program_number = dt2;
-        self.inst.change_inst(
-            dt2 as usize, 
-            self.cc7_volume,
-            self.cc10_pan,
-            self.cc11_expression);
-        self.inst.pitch(
-            self.pitch_bend_value,
-            self.cc12_note_shift,
-            self.cc13_tune);
+        let vol = self.cc7_volume;
+        let pan = self.cc10_pan;
+        let exp = self.cc11_expression;
+        let pb = self.pitch_bend_value;
+        let ns = self.cc12_note_shift;
+        let tn = self.cc13_tune;
+        self.inst_comp.change_inst(dt2 as usize, vol, pan, exp);
+        self.get_inst().pitch(pb, ns, tn);
         println!("Program Change: {}",dt2);
     }
     pub fn pitch_bend(&mut self, bend: i16) {
         self.pitch_bend_value = bend;
+        let ns = self.cc12_note_shift;
+        let tn = self.cc13_tune;
         println!("Pitch Bend: {}",bend);
-        self.inst.pitch(bend,self.cc12_note_shift,self.cc13_tune);
+        self.get_inst().pitch(bend, ns, tn);
     }
     pub fn process(&mut self,
                    abuf_l: &mut msgf_afrm::AudioFrame,
                    abuf_r: &mut msgf_afrm::AudioFrame,
                    in_number_frames: usize) {
-        self.audio_buffer_l.set_sample_number(in_number_frames as usize);
-        self.audio_buffer_l.clr_abuf();
-        self.audio_buffer_r.set_sample_number(in_number_frames as usize);
-        self.audio_buffer_r.clr_abuf();
-        self.inst.process(&mut self.audio_buffer_l, &mut self.audio_buffer_r, in_number_frames);
+        let mut audio_buffer_l = msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE);
+        let mut audio_buffer_r = msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE);
+        audio_buffer_l.set_sample_number(in_number_frames as usize);
+        audio_buffer_l.clr_abuf();
+        audio_buffer_r.set_sample_number(in_number_frames as usize);
+        audio_buffer_r.clr_abuf();
+        let inst = self.get_inst();
+        inst.process(&mut audio_buffer_l, &mut audio_buffer_r, in_number_frames);
         // Part Volume, Part Pan, Effect 
-        self.audio_buffer_l.copy_to_abuf(abuf_l);
-        self.audio_buffer_r.copy_to_abuf(abuf_r);
+        audio_buffer_l.copy_to_abuf(abuf_l);
+        audio_buffer_r.copy_to_abuf(abuf_r);
     }
 }
