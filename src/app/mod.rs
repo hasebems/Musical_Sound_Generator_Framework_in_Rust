@@ -19,7 +19,7 @@ pub struct InstComposite {
     va: InstVa,
 }
 //---------------------------------------------------------
-//		Imprements
+//		Implements
 //---------------------------------------------------------
 impl InstComposite {
     pub fn new(vol:u8, pan:u8, exp:u8) -> Self {

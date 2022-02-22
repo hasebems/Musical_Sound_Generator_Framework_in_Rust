@@ -31,7 +31,7 @@ pub struct Msgf {
     in_number_frames: u32,
 }
 //---------------------------------------------------------
-//		Imprements
+//		Implements
 //---------------------------------------------------------
 impl Msgf {
     pub fn new() -> Self {

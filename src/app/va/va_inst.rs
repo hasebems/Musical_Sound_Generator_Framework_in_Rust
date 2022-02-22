@@ -33,7 +33,7 @@ pub struct InstVa {
     inst_prm: Rc<Cell<va_prm::SynthParameter>>,
 }
 //---------------------------------------------------------
-//		Imprements
+//		Implements
 //---------------------------------------------------------
 impl Drop for InstVa {
     fn drop(&mut self) {self.vcevec.clear();}

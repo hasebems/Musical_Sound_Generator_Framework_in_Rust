@@ -39,7 +39,7 @@ pub struct VoiceVa {
     ended: bool,
 }
 //---------------------------------------------------------
-//		Imprements
+//		Implements
 //---------------------------------------------------------
 impl PartialEq for VoiceVa {
     fn eq(&self, other: &Self) -> bool {

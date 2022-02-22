@@ -44,7 +44,7 @@ pub struct Aeg {
     release_rsv: bool,
 }
 //---------------------------------------------------------
-//		Imprements
+//		Implements
 //---------------------------------------------------------
 impl Aeg {
     pub fn new(ref_prms: &AegParameter) -> Aeg {

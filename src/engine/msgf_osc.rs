@@ -87,7 +87,7 @@ pub struct Osc {
     next_phase: f32,    //  0.0 - 1.0
 }
 //---------------------------------------------------------
-//		Imprements
+//		Implements
 //---------------------------------------------------------
 impl Osc {
     pub fn new(prms:&OscParameter, note:u8, pmd:f32, cnt_pitch:f32) -> Osc {

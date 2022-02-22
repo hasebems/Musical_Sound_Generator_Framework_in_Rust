@@ -39,7 +39,7 @@ pub struct Part {
     inst_comp: InstComposite,
 }
 //---------------------------------------------------------
-//		Imprements
+//		Implements
 //---------------------------------------------------------
 impl Part {
     pub fn new() -> Self {

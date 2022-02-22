@@ -53,7 +53,7 @@ pub struct Lfo {
     dac_counter: u64,
 }
 //---------------------------------------------------------
-//		Imprements
+//		Implements
 //---------------------------------------------------------
 impl Lfo {
     pub fn new(ref_prms: &LfoParameter) -> Lfo {

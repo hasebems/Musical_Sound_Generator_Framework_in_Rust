@@ -19,7 +19,7 @@ pub struct AudioFrame {
     index: usize,
 }
 //---------------------------------------------------------
-//		Imprements
+//		Implements
 //---------------------------------------------------------
 impl AudioFrame {
     pub fn new(mut sample_number: usize, total_size: usize) -> Self {
