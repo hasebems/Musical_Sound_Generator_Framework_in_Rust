@@ -143,15 +143,8 @@ impl Part {
                    abuf_l: &mut msgf_afrm::AudioFrame,
                    abuf_r: &mut msgf_afrm::AudioFrame,
                    in_number_frames: usize) {
-        let mut audio_buffer_l = msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE);
-        let mut audio_buffer_r = msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE);
-        audio_buffer_l.set_sample_number(in_number_frames as usize);
-        audio_buffer_l.clr_abuf();
-        audio_buffer_r.set_sample_number(in_number_frames as usize);
-        audio_buffer_r.clr_abuf();
-        self.inst.process(&mut audio_buffer_l, &mut audio_buffer_r, in_number_frames);
-        // Part Volume, Part Pan, Effect 
-        audio_buffer_l.copy_to_abuf(abuf_l);
-        audio_buffer_r.copy_to_abuf(abuf_r);
+        abuf_l.clr_abuf();
+        abuf_r.clr_abuf();
+        self.inst.process(abuf_l, abuf_r, in_number_frames);
     }
 }

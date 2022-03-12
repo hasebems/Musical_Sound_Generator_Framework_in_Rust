@@ -45,7 +45,7 @@ impl AudioFrame {
             ab[i] += self.abuf[i];
         }
     }
-    pub fn copy_to_abuf(&self, ab: &mut AudioFrame) {
+    pub fn _copy_to_abuf(&self, ab: &mut AudioFrame) {
         for i in 0..self.sample_number {
             ab.abuf[i] = self.abuf[i];
         }
