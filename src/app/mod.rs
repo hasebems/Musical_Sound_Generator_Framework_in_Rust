@@ -7,31 +7,11 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
+use crate::core::msgf_inst;
+
+//  You can select a specific app.
 pub mod va;
-
-use crate::core::msgf_inst::Inst;
-use crate::app::va::va_inst::*;
-
-//---------------------------------------------------------
-//		Definition
-//---------------------------------------------------------
-pub struct InstComposite {
-    va: InstVa,
-}
-//---------------------------------------------------------
-//		Implements
-//---------------------------------------------------------
-impl InstComposite {
-    pub fn new(vol:u8, pan:u8, exp:u8) -> Self {
-        Self {
-            va: InstVa::new(0, vol, pan, exp),
-        }
-    }
-    pub fn get_inst(&mut self) -> &mut impl Inst {
-        &mut self.va
-    }
-    pub fn change_inst(&mut self, inst_number: usize, vol:u8, pan:u8, exp:u8) {
-        self.va.change_inst(inst_number, vol, pan, exp);
-        println!("Inst Changed!")
-    }
-}
+use crate::app::va::*;
+pub fn get_inst(inst_number:usize, vol:u8, pan:u8, exp:u8) -> Box<dyn msgf_inst::Inst> {
+    Box::new(va_inst::InstVa::new(inst_number,vol,pan,exp))
+} 

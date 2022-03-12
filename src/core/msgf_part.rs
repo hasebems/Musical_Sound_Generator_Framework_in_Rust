@@ -10,8 +10,6 @@
 //
 use crate::*;
 use crate::core::*;
-use crate::core::msgf_inst::*;
-use crate::app::InstComposite;
 
 //---------------------------------------------------------
 //		Definition
@@ -36,7 +34,7 @@ pub struct Part {
     cc16_31_change_vprm: [u8; 16],
 	
     //	Composite Object
-    inst_comp: InstComposite,
+    inst: Box<dyn msgf_inst::Inst>,
 }
 //---------------------------------------------------------
 //		Implements
@@ -60,66 +58,63 @@ impl Part {
             program_number: 0,
             pitch_bend_value: 0,
             cc16_31_change_vprm: [0; 16],
-            inst_comp: InstComposite::new(100,64,127),
+            inst: app::get_inst(0,100,64,127), //pgn,vol,pan,exp,
         }
     }
-    fn get_inst(&mut self) -> &mut impl Inst {
-        self.inst_comp.get_inst()
-    }
     pub fn note_off(&mut self, dt2: u8, dt3: u8) {
-        self.get_inst().note_off(dt2, dt3);
+        self.inst.note_off(dt2, dt3)
     }
     pub fn note_on(&mut self, dt2: u8, dt3: u8) {
-        self.get_inst().note_on(dt2, dt3);
+        self.inst.note_on(dt2, dt3)
     }
     pub fn control_change(&mut self, controller: u8, value: u8) {
         match controller {
             0 => self.cc0_msb = value,
             1 => {
                 self.cc1_modulation_wheel = value;
-                self.get_inst().modulation(value);
+                self.inst.modulation(value);
             }
             5 => self.cc5_portamento_time = value,
             7 => {
                 self.cc7_volume = value;
-                self.get_inst().volume(value);
+                self.inst.volume(value);
             }
             10 => {
                 self.cc10_pan = value;
-                self.get_inst().pan(value);
+                self.inst.pan(value);
             }
             11 => {
                 self.cc11_expression = value;
-                self.get_inst().expression(value);
+                self.inst.expression(value);
             }
             12 => {
                 self.cc12_note_shift = value;
                 let pb = self.pitch_bend_value;
                 let tn = self.cc13_tune;
-                self.get_inst().pitch(pb, value, tn);
+                self.inst.pitch(pb, value, tn);
             }
             13 => {
                 self.cc13_tune = value;
                 let pb = self.pitch_bend_value;
                 let ns = self.cc12_note_shift;
-                self.get_inst().pitch(pb, ns, value);
+                self.inst.pitch(pb, ns, value);
             }
             32 => self.cc32_lsb = value,
             64 => {
                 self.cc64_sustain = value;
-                self.get_inst().sustain(value);
+                self.inst.sustain(value);
             }
             65 => self.cc65_portamento = value,
             66 => self.cc66_sostenuto = value,
             120 => {
                 if value == 0 {
-                    self.get_inst().all_sound_off();
+                    self.inst.all_sound_off();
                 }
             }
             16..=31 => {
                 let vprm_num: u8 = controller-16;
                 self.cc16_31_change_vprm[vprm_num as usize] = value;
-                self.get_inst().set_prm(vprm_num, value);
+                self.inst.set_prm(vprm_num, value);
             }
             _ => {}
         };
@@ -133,8 +128,8 @@ impl Part {
         let pb = self.pitch_bend_value;
         let ns = self.cc12_note_shift;
         let tn = self.cc13_tune;
-        self.inst_comp.change_inst(dt2 as usize, vol, pan, exp);
-        self.get_inst().pitch(pb, ns, tn);
+        self.inst.change_inst(dt2 as usize, vol, pan, exp);
+        self.inst.pitch(pb, ns, tn);
         println!("Program Change: {}",dt2);
     }
     pub fn pitch_bend(&mut self, bend: i16) {
@@ -142,7 +137,7 @@ impl Part {
         let ns = self.cc12_note_shift;
         let tn = self.cc13_tune;
         println!("Pitch Bend: {}",bend);
-        self.get_inst().pitch(bend, ns, tn);
+        self.inst.pitch(bend, ns, tn);
     }
     pub fn process(&mut self,
                    abuf_l: &mut msgf_afrm::AudioFrame,
@@ -154,8 +149,7 @@ impl Part {
         audio_buffer_l.clr_abuf();
         audio_buffer_r.set_sample_number(in_number_frames as usize);
         audio_buffer_r.clr_abuf();
-        let inst = self.get_inst();
-        inst.process(&mut audio_buffer_l, &mut audio_buffer_r, in_number_frames);
+        self.inst.process(&mut audio_buffer_l, &mut audio_buffer_r, in_number_frames);
         // Part Volume, Part Pan, Effect 
         audio_buffer_l.copy_to_abuf(abuf_l);
         audio_buffer_r.copy_to_abuf(abuf_r);
