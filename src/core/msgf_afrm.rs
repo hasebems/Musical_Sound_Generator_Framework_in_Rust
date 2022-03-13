@@ -75,11 +75,11 @@ impl AudioFrame {
         let newval = Self::limit_check(val, 0.0);
         self.abuf[num] = newval;
     }
-    pub fn add_to_abuf(&mut self, num: usize, val: f32) {
+    pub fn add_val(&mut self, num: usize, val: f32) {
         let newval = Self::limit_check(self.abuf[num], val);
         self.abuf[num] = newval;
     }
-    pub fn mul_abuf(&mut self, num: usize, rate: f32) {
+    pub fn mul_rate(&mut self, num: usize, rate: f32) {
         let newval = Self::limit_check(self.abuf[num]*rate, 0.0);
         self.abuf[num] = newval;
     }
@@ -103,15 +103,15 @@ impl AudioFrame {
         for i in 0..self.sample_number {
             if let Some(src_dt) = srcbuf.get_from_abuf(i) {
                 let val: f32 = src_dt*mul_value;
-                self.add_to_abuf(i, val);
+                self.add_val(i, val);
             }
         }
     }
-    pub fn _mix_and_check_no_sound(&mut self, srcbuf: &AudioFrame) -> bool {
+    pub fn mix_and_check_no_sound(&mut self, srcbuf: &AudioFrame) -> bool {
         let mut cnt: usize = 0;
         for i in 0..self.sample_number {
             if let Some(val) = srcbuf.get_from_abuf(i) {
-                self.add_to_abuf(i, val);
+                self.add_val(i, val);
                 if val < msgf_if::DAMP_LIMIT_DEPTH {
                     cnt += 1;
                 }

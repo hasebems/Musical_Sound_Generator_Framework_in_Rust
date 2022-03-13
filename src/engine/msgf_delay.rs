@@ -65,7 +65,7 @@ impl Delay {
                         if crnt_dt < msgf_if::DAMP_LIMIT_DEPTH && -msgf_if::DAMP_LIMIT_DEPTH < crnt_dt {
                             crnt_dt = 0.0;
                         }
-                        in_abuf[str].add_to_abuf(i, crnt_dt);
+                        in_abuf[str].add_val(i, crnt_dt);
                     }
                     self.delay_buffer[str].set_abuf(self.wr_ptr[str], crnt_dt);
                 }

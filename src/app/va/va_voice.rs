@@ -92,7 +92,7 @@ impl msgf_voice::Voice for VoiceVa {
         //  Volume
         for i in 0..abuf.sample_number {
             let aeg = aegbuf.ctrl_for_audio(i);
-            abuf.mul_abuf(i, self.max_note_vol*aeg);
+            abuf.mul_rate(i, self.max_note_vol*aeg);
         }
         self.manage_note_level(abuf, aegbuf)
     }
@@ -145,7 +145,7 @@ impl VoiceVa {
                     rate = (cntdwn as f32)/(DAMP_TIME as f32);
                     rate *= rate;
                 }
-                abuf.mul_abuf(snum, rate);
+                abuf.mul_rate(snum, rate);
                 self.damp_counter += 1;
                 if self.damp_counter > DAMP_TIME {
                     self.ended = true;
