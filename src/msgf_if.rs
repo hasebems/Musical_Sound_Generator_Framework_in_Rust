@@ -28,6 +28,10 @@ pub struct Msgf {
     part: Vec<msgf_part::Part>,
     audio_buffer_l: msgf_afrm::AudioFrame,
     audio_buffer_r: msgf_afrm::AudioFrame,
+    audio_buffer_send_effect_l: msgf_afrm::AudioFrame,
+    audio_buffer_send_effect_r: msgf_afrm::AudioFrame,
+    audio_buffer_total_effect_l: msgf_afrm::AudioFrame,
+    audio_buffer_total_effect_r: msgf_afrm::AudioFrame,
     in_number_frames: u32,
 }
 //---------------------------------------------------------
@@ -40,6 +44,10 @@ impl Msgf {
             part: Vec::new(),
             audio_buffer_l: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
             audio_buffer_r: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
+            audio_buffer_send_effect_l: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
+            audio_buffer_send_effect_r: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
+            audio_buffer_total_effect_l: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
+            audio_buffer_total_effect_r: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
             in_number_frames: 0,
         };
         for _ in 0..MAX_PART_NUM {
@@ -87,15 +95,38 @@ impl Msgf {
         }
         self.audio_buffer_l.set_sample_number(in_number_frames as usize);
         self.audio_buffer_r.set_sample_number(in_number_frames as usize);
+        // init effect buffer
+        self.audio_buffer_send_effect_l.set_sample_number(in_number_frames as usize);
+        self.audio_buffer_send_effect_r.set_sample_number(in_number_frames as usize);
+        self.audio_buffer_total_effect_l.set_sample_number(in_number_frames as usize);
+        self.audio_buffer_total_effect_r.set_sample_number(in_number_frames as usize);
         if MAX_PART_NUM >= 1 {      //  Part 1 は copy
-            self.part[0].process(&mut self.audio_buffer_l, &mut self.audio_buffer_r, in_number_frames as usize);
+            self.part[0].process(
+                &mut self.audio_buffer_l,
+                &mut self.audio_buffer_r,
+                &mut self.audio_buffer_total_effect_l,
+                &mut self.audio_buffer_total_effect_r,
+                in_number_frames as usize);
             self.audio_buffer_l.copy_to_sysbuf(abuf_l);  // L
             self.audio_buffer_r.copy_to_sysbuf(abuf_r);  // R
         }
         for i in 1..MAX_PART_NUM { //  Part 2 以降は add
-            self.part[i].process(&mut self.audio_buffer_l, &mut self.audio_buffer_r, in_number_frames as usize);
+            self.part[i].process(
+                &mut self.audio_buffer_l,
+                &mut self.audio_buffer_r,
+                &mut self.audio_buffer_send_effect_l,
+                &mut self.audio_buffer_send_effect_r,
+                in_number_frames as usize);
             self.audio_buffer_l.add_to_sysbuf(abuf_l);  // L
             self.audio_buffer_r.add_to_sysbuf(abuf_r);  // R
+            self.audio_buffer_total_effect_l.mix_and_check_no_sound(&mut self.audio_buffer_send_effect_l);  // L
+            self.audio_buffer_total_effect_r.mix_and_check_no_sound(&mut self.audio_buffer_send_effect_r);  // R
         };
+        // Effect
+        self.audio_buffer_total_effect_l.clr_abuf();
+        self.audio_buffer_total_effect_r.clr_abuf();
+        //  sysbuf に足す
+        self.audio_buffer_total_effect_l.add_to_sysbuf(abuf_l);  // L
+        self.audio_buffer_total_effect_r.add_to_sysbuf(abuf_r);  // R
     }
 }
