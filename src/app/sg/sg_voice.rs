@@ -52,6 +52,13 @@ impl msgf_voice::Voice for VoiceSg {
         self.aeg.move_to_attack();
         self.lfo.start();
     }
+    fn slide(&mut self, note:u8, vel:u8) {
+        self.note = note;
+        self.vel = vel;
+        self.osc.change_note(note);
+        self.aeg.move_to_attack();
+        self.lfo.start();
+    }
     fn note_off(&mut self) {
         self.status = NoteStatus::AfterNoteOff;
         self.aeg.move_to_release()

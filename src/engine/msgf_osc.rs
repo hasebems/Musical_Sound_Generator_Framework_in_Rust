@@ -80,8 +80,8 @@ const SIN_TABLE: [f32; 261] = //   index should be used by adding 2.
 //		Definition
 //---------------------------------------------------------
 pub struct Osc {
-    lfo_depth: f32,
-    wv_type: WvType,
+    prms_variable: OscParameter,
+    pmd: f32,
     base_pitch: f32,    //  [Hz]
     cnt_ratio: f32,     //  ratio of Hz
     next_phase: f32,    //  0.0 - 1.0
@@ -92,14 +92,17 @@ pub struct Osc {
 impl Osc {
     pub fn new(prms:&OscParameter, note:u8, pmd:f32, cnt_pitch:f32) -> Osc {
         Osc {
-            lfo_depth: pmd,
-            wv_type: prms.wv_type,
+            prms_variable: *prms,
+            pmd,
             base_pitch: Osc::calc_base_pitch(prms, note),
             cnt_ratio: Osc::calc_cnt_pitch(cnt_pitch),
             next_phase: 0.0,
         }
     }
-    pub fn change_pmd(&mut self, value:f32) {self.lfo_depth = value;}
+    pub fn change_pmd(&mut self, value:f32) {self.pmd = value;}
+    pub fn change_note(&mut self, note:u8) {
+        self.base_pitch = Osc::calc_base_pitch(&self.prms_variable, note);
+    }
     fn limit_note(calculated_note:i32) -> u8 {
         let mut note = calculated_note;
         while note < 0 { note += 12;}
@@ -147,7 +150,7 @@ impl Osc {
         self.cnt_ratio = Osc::calc_cnt_pitch(cnt_pitch);
     }
     fn get_wave_func(&self) -> WvFn {
-        match self.wv_type {
+        match self.prms_variable.wv_type {
             WvType::Sine => {
                 //wave_func = |x, _y| {
                 //  let phase = x * 2.0 * msgf_if::PI;
@@ -208,7 +211,7 @@ impl Osc {
         let wave_func: WvFn = self.get_wave_func();
         for i in 0..abuf.sample_number {
             abuf.set_abuf(i, wave_func(phase, max_overtone));
-            let magnitude = lbuf.ctrl_for_audio(i)*self.lfo_depth;
+            let magnitude = lbuf.ctrl_for_audio(i)*self.prms_variable.lfo_depth;
             phase += delta_phase*(2.0_f32.powf(magnitude));
             while phase > 1.0 { phase -= 1.0 }
         }

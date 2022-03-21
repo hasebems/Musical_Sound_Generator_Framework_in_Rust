@@ -25,6 +25,7 @@ pub enum NoteStatus {
 //---------------------------------------------------------
 pub trait Voice {
     fn start_sound(&mut self);
+    fn slide(&mut self, _note: u8, _vel: u8){}
     fn note_off(&mut self);
     fn damp(&mut self);
     fn change_pmd(&mut self, value: f32);

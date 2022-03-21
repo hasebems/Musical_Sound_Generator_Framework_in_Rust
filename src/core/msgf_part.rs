@@ -128,7 +128,7 @@ impl Part {
         let pb = self.pitch_bend_value;
         let ns = self.cc12_note_shift;
         let tn = self.cc13_tune;
-        self.inst.change_inst(dt2 as usize, vol, pan, exp);
+        self.inst = app::get_inst(self.program_number as usize,vol,pan,exp); //pgn,vol,pan,exp,
         self.inst.pitch(pb, ns, tn);
         println!("Program Change: {}",dt2);
     }

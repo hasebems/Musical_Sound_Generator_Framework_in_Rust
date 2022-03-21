@@ -19,7 +19,7 @@ pub struct SynthParameter {
     pub lfo: LfoParameter,
 }
 
-pub const SG_MAX_TONE_COUNT:usize = 4;
+pub const SG_MAX_TONE_COUNT:usize = 1;
 pub const SG_TONE_PRM: [SynthParameter; SG_MAX_TONE_COUNT] = [
     SynthParameter {
         osc: OscParameter {
@@ -40,69 +40,6 @@ pub const SG_TONE_PRM: [SynthParameter; SG_MAX_TONE_COUNT] = [
             direction: LfoDirection::LfoBoth,
             fadein_time: 100,   //  1: AUDIO_FRAME_PER_CONTROL / SAMPLING_FREQ (=3msec)
             delay_time: 100,    //    same as above
-        },
-    },
-    SynthParameter {
-        osc: OscParameter {
-            coarse_tune: 0,
-            fine_tune: 0.0,
-            lfo_depth: 0.0,
-            wv_type: WvType::Saw,
-        },
-        aeg: AegParameter {
-            attack_rate: 0.9,
-            decay_rate: 1.0,
-            sustain_level: 1.0,
-            release_rate: 0.2,
-        },
-        lfo: LfoParameter {
-            freq: 5.0,
-            wave: LfoWave::Tri,
-            direction: LfoDirection::LfoBoth,
-            fadein_time: 200,
-            delay_time: 200,
-        },
-    },
-    SynthParameter {
-        osc: OscParameter {
-            coarse_tune: 0,
-            fine_tune: 0.0,
-            lfo_depth: 0.02,
-            wv_type: WvType::Square,
-        },
-        aeg: AegParameter {
-            attack_rate: 0.5,
-            decay_rate: 0.01,
-            sustain_level: 0.5,
-            release_rate: 0.1,
-        },
-        lfo: LfoParameter {
-            freq: 4.5,
-            wave: LfoWave::Tri,
-            direction: LfoDirection::LfoBoth,
-            fadein_time: 300,
-            delay_time: 300,
-        },
-    },
-    SynthParameter {
-        osc: OscParameter {
-            coarse_tune: -12,
-            fine_tune: 0.0,
-            lfo_depth: 0.04,
-            wv_type: WvType::Pulse,
-        },
-        aeg: AegParameter {
-            attack_rate: 0.5,
-            decay_rate: 0.01,
-            sustain_level: 0.5,
-            release_rate: 0.1,
-        },
-        lfo: LfoParameter {
-            freq: 4.0,
-            wave: LfoWave::Tri,
-            direction: LfoDirection::LfoBoth,
-            fadein_time: 100,
-            delay_time: 200,
         },
     },
 ];
