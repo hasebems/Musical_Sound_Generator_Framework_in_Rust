@@ -11,3 +11,4 @@ pub mod msgf_aeg;
 pub mod msgf_osc;
 pub mod msgf_lfo;
 pub mod msgf_delay;
+pub mod msgf_table;
