@@ -211,7 +211,7 @@ impl Osc {
         let wave_func: WvFn = self.get_wave_func();
         for i in 0..abuf.sample_number {
             abuf.set_abuf(i, wave_func(phase, max_overtone));
-            let magnitude = lbuf.ctrl_for_audio(i)*self.prms_variable.lfo_depth;
+            let magnitude = lbuf.ctrl_for_audio(i)*self.pmd;
             phase += delta_phase*(2.0_f32.powf(magnitude));
             while phase > 1.0 { phase -= 1.0 }
         }
