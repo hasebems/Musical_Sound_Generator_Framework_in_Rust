@@ -32,7 +32,7 @@ pub struct VoiceSg {
     damp_counter: u32,
     lvl_check_buf: msgf_afrm::AudioFrame,
     // Synth
-    osc: msgf_osc::Osc,
+    osc: msgf_additive::Additive,
     aeg: msgf_aeg::Aeg,
     lfo: msgf_lfo::Lfo,
     max_note_vol: f32,
@@ -113,7 +113,7 @@ impl msgf_voice::Voice for VoiceSg {
 }
 
 impl VoiceSg {
-    pub fn new(note:u8, vel:u8, pmd:f32, pit:f32, vol:u8, exp:u8,
+    pub fn new(note:u8, vel:u8, _pmd:f32, pit:f32, vol:u8, exp:u8,
         inst_prm: Rc<Cell<sg_prm::SynthParameter>>) -> Self {
         let tprm: &sg_prm::SynthParameter = &inst_prm.get();
         Self {
@@ -122,7 +122,7 @@ impl VoiceSg {
             status: NoteStatus::DuringNoteOn,
             damp_counter: 0,
             lvl_check_buf: msgf_afrm::AudioFrame::new((msgf_if::SAMPLING_FREQ/100.0) as usize, msgf_if::MAX_BUFFER_SIZE),
-            osc: msgf_osc::Osc::new(&tprm.osc, note, pmd, pit),
+            osc: msgf_additive::Additive::new(&tprm.osc, note, pit),
             aeg: msgf_aeg::Aeg::new(&tprm.aeg),
             lfo: msgf_lfo::Lfo::new(&tprm.lfo),
             max_note_vol: VoiceSg::calc_vol(vol, exp),

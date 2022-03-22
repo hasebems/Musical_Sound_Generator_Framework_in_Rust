@@ -49,23 +49,24 @@ impl Osc {
         Osc {
             prms_variable: *prms,
             pmd,
-            base_pitch: Osc::calc_base_pitch(prms, note),
+            base_pitch: Osc::calc_base_pitch(prms.coarse_tune, prms.fine_tune, note),
             cnt_ratio: Osc::calc_cnt_pitch(cnt_pitch),
             next_phase: 0.0,
         }
     }
     pub fn change_pmd(&mut self, value:f32) {self.pmd = value;}
-    pub fn change_note(&mut self, note:u8) {
-        self.base_pitch = Osc::calc_base_pitch(&self.prms_variable, note);
+    pub fn _change_note(&mut self, note:u8) {
+        self.base_pitch = Osc::calc_base_pitch(self.prms_variable.coarse_tune,
+                                            self.prms_variable.fine_tune, note);
     }
-    fn limit_note(calculated_note:i32) -> u8 {
+    pub fn limit_note(calculated_note:i32) -> u8 {
         let mut note = calculated_note;
         while note < 0 { note += 12;}
         while note >= 128 { note -= 12;}
         note as u8
     }
-    fn calc_base_pitch(prms:&OscParameter, note:u8) -> f32 {
-        let tune_note: u8 = Osc::limit_note(note as i32 + prms.coarse_tune);
+    pub fn calc_base_pitch(coarse_tune:i32, fine_tune:f32, note:u8) -> f32 {
+        let tune_note: u8 = Osc::limit_note(note as i32 + coarse_tune);
         let solfa_name: u8 = (tune_note + 3)%12;
         let octave: usize = ((tune_note as usize) + 3)/12;
         let mut ap = msgf_table::PITCH_OF_A[octave];
@@ -73,10 +74,10 @@ impl Osc {
         for _ in 0..solfa_name {
             ap *= ratio;
         }
-        ap *= (prms.fine_tune*(2_f32.ln()/1200_f32)).exp();
+        ap *= (fine_tune*(2_f32.ln()/1200_f32)).exp();
         ap
     }
-    fn pseudo_sine(mut phase:f32) -> f32 {
+    pub fn pseudo_sine(mut phase:f32) -> f32 {
         // Lagrange interpolation
         while phase > 1.0 { phase -= 1.0 }
         let nrm_phase:f32 = phase * 256.0;
@@ -94,7 +95,7 @@ impl Osc {
         else if y < -1.0 { y = -1.0 }
         y
     }
-    fn calc_cnt_pitch(pitch: f32) -> f32 {    //  pitch : [cent]
+    pub fn calc_cnt_pitch(pitch: f32) -> f32 {    //  pitch : [cent]
         let mut pt: f32 = 1.0;
         if pitch != 0.0 {
             pt = (pitch*(2_f32.ln()/1200_f32)).exp();

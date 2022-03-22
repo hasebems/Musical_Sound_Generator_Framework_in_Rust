@@ -59,7 +59,7 @@ impl msgf_inst::Inst for InstSg {
         }
         let _ = &self.inst_prm.replace(sg_prm::SG_TONE_PRM[inst_number]);
         self.inst_number = inst_number;
-        self.mdlt = self.inst_prm.get().osc.lfo_depth;
+        //self.mdlt = self.inst_prm.get().osc.lfo_depth;
         self.pit = 0.0;
         self.vol = vol;
         self.pan = Self::calc_pan(pan);
@@ -181,7 +181,7 @@ impl InstSg {
             vce: None,
             active_vce_index: -1,
             inst_number,
-            mdlt: prm.get().osc.lfo_depth,
+            mdlt: 0.0,//prm.get().osc.lfo_depth,
             pit: 0.0,
             vol,
             pan: Self::calc_pan(pan),

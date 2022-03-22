@@ -8,13 +8,13 @@
 //  Released under the MIT license
 //  https://opensource.org/licenses/mit-license.php
 //
-use crate::engine::msgf_osc::*;
+use crate::engine::msgf_additive::*;
 use crate::engine::msgf_aeg::*;
 use crate::engine::msgf_lfo::*;
 
 #[derive(Copy, Clone)]
 pub struct SynthParameter {
-    pub osc: OscParameter,
+    pub osc: AdditiveParameter,
     pub aeg: AegParameter,
     pub lfo: LfoParameter,
 }
@@ -22,17 +22,15 @@ pub struct SynthParameter {
 pub const SG_MAX_TONE_COUNT:usize = 1;
 pub const SG_TONE_PRM: [SynthParameter; SG_MAX_TONE_COUNT] = [
     SynthParameter {
-        osc: OscParameter {
+        osc: AdditiveParameter {
             coarse_tune: 0,     //  i32 : 0 means tuning of A=440[Hz]
             fine_tune: 0.0,     //  f32 : 1.0 means 1[cent]
-            lfo_depth: 0.02,    //  f32 : 1.0 means +-1oct.
-            wv_type: WvType::Sine,
         },
         aeg: AegParameter {
-            attack_rate: 0.5,   //  0.0-1.0
-            decay_rate: 0.01,   //  0.0-1.0 : 1.0 means no decay and no sustain level
-            sustain_level: 0.1, //  1 means same value as Attack Level
-            release_rate: 0.01, //  0.0-1.0
+            attack_rate: 0.6,   //  0.0-1.0
+            decay_rate: 0.05,   //  0.0-1.0 : 1.0 means no decay and no sustain level
+            sustain_level: 0.5, //  1 means same value as Attack Level
+            release_rate: 0.1, //  0.0-1.0
         },
         lfo: LfoParameter {
             freq: 6.0,          //  [Hz]
