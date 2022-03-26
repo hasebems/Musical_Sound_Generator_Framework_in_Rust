@@ -20,6 +20,7 @@ use crate::engine::msgf_table;
 pub struct AdditiveParameter {
     pub coarse_tune: i32,   //  [semitone]
     pub fine_tune: f32,     //  [cent]
+    pub pmd: f32,
 }
 //---------------------------------------------------------
 //		Definition
@@ -38,7 +39,7 @@ impl Additive {
     pub fn new(prms:&AdditiveParameter, note:u8, cnt_pitch:f32) -> Additive {
         Self {
             prms_variable: *prms,
-            pmd: 0.0,
+            pmd: prms.pmd,
             base_pitch: Osc::calc_base_pitch(prms.coarse_tune, prms.fine_tune, note),
             cnt_ratio: Osc::calc_cnt_pitch(cnt_pitch),
             next_phase: 0.0,
@@ -52,15 +53,13 @@ impl Additive {
     pub fn change_pitch(&mut self, cnt_pitch:f32) {
         self.cnt_ratio = Osc::calc_cnt_pitch(cnt_pitch);
     }
-    fn wave_func(&self, x: f32, y: usize) -> f32 {
+    fn wave_func(&self, phase: f32, y: usize) -> f32 {
         let mut pls: f32 = 0.1;
-        let mut oti = y;
-        if oti > 32 {oti = 32;}
+        let oti = if y <= 32 {y} else {32};
         for j in 1..oti {
             let ot:f32 = j as f32;
-            let phase:f32 = x * ot;
-            pls += 0.5*msgf_table::PULSE0_1[j]*Osc::pseudo_sine(phase);
-            }
+            pls += msgf_table::PULSE0_1[j]*Osc::pseudo_sine(phase*ot+1.0);
+        }
         pls
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {

@@ -25,12 +25,13 @@ pub const SG_TONE_PRM: [SynthParameter; SG_MAX_TONE_COUNT] = [
         osc: AdditiveParameter {
             coarse_tune: 0,     //  i32 : 0 means tuning of A=440[Hz]
             fine_tune: 0.0,     //  f32 : 1.0 means 1[cent]
+            pmd: 0.005,         //  f32 : 1.0 means +-1oct.
         },
         aeg: AegParameter {
             attack_rate: 0.6,   //  0.0-1.0
             decay_rate: 0.05,   //  0.0-1.0 : 1.0 means no decay and no sustain level
             sustain_level: 0.5, //  1 means same value as Attack Level
-            release_rate: 0.1, //  0.0-1.0
+            release_rate: 0.02, //  0.0-1.0
         },
         lfo: LfoParameter {
             freq: 6.0,          //  [Hz]

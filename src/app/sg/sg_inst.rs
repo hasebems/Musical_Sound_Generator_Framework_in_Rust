@@ -23,6 +23,7 @@ use crate::app::sg::sg_voice;
 struct NoteSg {
     note: u8,
     _vel: u8,
+    off: bool,
 }
 pub struct InstSg {
     vce_audio: msgf_afrm::AudioFrame,
@@ -38,12 +39,13 @@ pub struct InstSg {
     exp: u8,    //  0..127
     inst_prm: Rc<Cell<sg_prm::SynthParameter>>,
 }
+const NO_NOTE:i8 = -1;
 //---------------------------------------------------------
 //		Implements
 //---------------------------------------------------------
 impl NoteSg {
     fn new(note: u8, _vel: u8) -> Self {
-        Self {note, _vel,}
+        Self {note, _vel, off: false,}
     }
 }
 impl Drop for InstSg {
@@ -67,16 +69,17 @@ impl msgf_inst::Inst for InstSg {
     }
     fn note_off(&mut self, dt2: u8, _dt3: u8) {
         let nt_idx = self.search_note(dt2);
+        if nt_idx == NO_NOTE {return}
         if nt_idx == self.active_vce_index {
+            // sounding voice
             if let Some(cur_vce) = &mut self.vce {
                 cur_vce.note_off();
             }
+            self.vcevec[nt_idx as usize].off = true;
         }
-        else if nt_idx >= 0 {
-            self.vcevec.remove(nt_idx as usize);
-            if nt_idx < self.active_vce_index {
-                self.active_vce_index -= 1;
-            }
+        else {
+            // key pressd, but already no sound
+            self.remove_note(nt_idx);
         }
     }
     fn note_on(&mut self, dt2: u8, dt3: u8) {
@@ -90,8 +93,13 @@ impl msgf_inst::Inst for InstSg {
             new_vce.start_sound();
             self.vce = Some(new_vce);
         }
+        let cur_note = self.active_vce_index;
+        if cur_note > NO_NOTE && self.vcevec[cur_note as usize].off == true {
+            // Same note is releasing now
+            self.remove_note(cur_note);
+        }
         self.vcevec.push(NoteSg::new(dt2, dt3));
-        self.active_vce_index = (self.vcevec.len() as i8)-1;
+        self.active_vce_index = (self.vcevec.len() as i8)-1; // the last order
     }
     fn modulation(&mut self, value: u8) {
         let mdlt = 0.5f32*(value as f32)/127.0;
@@ -156,11 +164,10 @@ impl msgf_inst::Inst for InstSg {
         abuf_r.mul_and_mix(&mut self.inst_audio, self.pan);
 
         if vce_ended {
+            // when voice is released
             self.vce = None;
-            if self.vcevec.len() > 0 && self.active_vce_index >= 0 {
-                self.vcevec.remove(self.active_vce_index as usize);
-                self.active_vce_index = -1;
-            }
+            assert!(self.vcevec.len() > 0);
+            self.remove_note(self.active_vce_index);
             println!("Released!");
         }
     }
@@ -179,7 +186,7 @@ impl InstSg {
             inst_audio: msgf_afrm::AudioFrame::new(0,msgf_if::MAX_BUFFER_SIZE),
             vcevec: Vec::new(),
             vce: None,
-            active_vce_index: -1,
+            active_vce_index: NO_NOTE,
             inst_number,
             mdlt: 0.0,//prm.get().osc.lfo_depth,
             pit: 0.0,
@@ -202,7 +209,16 @@ impl InstSg {
         }
         return -1
     }
-
+    fn remove_note(&mut self, nt_idx:i8) {
+        assert!(nt_idx != NO_NOTE);
+        self.vcevec.remove(nt_idx as usize);
+        if nt_idx == self.active_vce_index {
+            self.active_vce_index = NO_NOTE;
+        }
+        else if nt_idx < self.active_vce_index {
+            self.active_vce_index -= 1;
+        }
+    }
     fn _debug(&mut self) {
         let sz = self.vcevec.len();
         println!("Debug!: {}",sz);
