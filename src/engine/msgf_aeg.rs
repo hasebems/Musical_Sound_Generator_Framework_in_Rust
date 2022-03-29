@@ -65,6 +65,7 @@ impl Aeg {
         self.crnt_rate = self.prms.attack_rate;
         self.state = EgState::Attack;
         self.interpolate_value = 0.0;
+        self.release_rsv = false;
     }
     fn move_to_decay(&mut self, eg_crnt: f32) {
         if self.prms.decay_rate == 1.0 {
