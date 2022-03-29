@@ -34,11 +34,7 @@ pub struct Additive {
     next_phase: f32,    //  0.0 - 1.0
     //  for Portamento
     target_pitch: f32,  //  [Hz]
-    crnt_note: u8,
-    target_note: u8,
-    prtm_half_point: f32,
     real_prtm_spd: f32,
-    prtm_lvl_counter: i32,
     //  for Pitch Bend
     cnt_ratio: f32,     //  ratio of Hz
 }
@@ -54,11 +50,7 @@ impl Additive {
             base_pitch: pit,
             next_phase: 0.0,
             target_pitch: pit,
-            crnt_note: note,
-            target_note: note,
-            prtm_half_point: 0.0,
             real_prtm_spd: 0.0,
-            prtm_lvl_counter: 0,
             cnt_ratio: Osc::calc_cnt_pitch(cnt_pitch),
         }
     }
@@ -66,12 +58,7 @@ impl Additive {
     pub fn change_note(&mut self, note:u8) {
         self.target_pitch = Osc::calc_base_pitch(self.prms_variable.coarse_tune,
                                                  self.prms_variable.fine_tune, note);
-        self.prtm_half_point = ((self.target_pitch - self.base_pitch)/2.0).abs();
-        self.target_note = note;
-        let diff_note = if self.crnt_note >= note {self.crnt_note-note} else {note-self.crnt_note};
-        self.real_prtm_spd = self.prms_variable.prtm_spd/(diff_note as f32).powf(0.25);
-        // 1/diff_note.pow(1/4) : 1..0.3
-        self.prtm_lvl_counter = 0;
+        self.real_prtm_spd = self.prms_variable.prtm_spd;//(diff_note as f32).powf(0.25);
     }
     pub fn change_pitch(&mut self, cnt_pitch:f32) {
         self.cnt_ratio = Osc::calc_cnt_pitch(cnt_pitch);
@@ -85,31 +72,20 @@ impl Additive {
         }
         pls
     }
-    fn pitch_interporation(&mut self) -> f32 {
+    fn pitch_interporation(&mut self, diff: f32) {
         //  Pitch Operation for Portamento
-        let diff = self.target_pitch - self.base_pitch;
         self.base_pitch += diff*self.real_prtm_spd;
         if self.target_pitch*1.01 > self.base_pitch &&
           self.target_pitch*0.99 < self.base_pitch {
             self.base_pitch = self.target_pitch;
-            self.crnt_note = self.target_note;
         }
-        //  Amplitude Operation for Portamento
-        let diffabs = diff.abs();
-        if diffabs > self.prtm_half_point { //  first half
-            self.prtm_lvl_counter += 6; // 0->0.5:0.5->0.99 ≒ 1:6 of time difference
-        }
-        else {  //  second half
-            self.prtm_lvl_counter -= 1;
-            if self.prtm_lvl_counter < 0 {self.prtm_lvl_counter = 0;}
-        }
-        let lvl_variable = (self.prtm_lvl_counter as f32)*0.007; // adjust speed 
-        if 1.0-lvl_variable > 0.1 {1.0-lvl_variable} else {0.1}
     }
     pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {
-        let mut lvl_variable = self.prms_variable.magnitude;
+        let lvl_variable = self.prms_variable.magnitude;
         if self.target_pitch != self.base_pitch {
-            lvl_variable *= self.pitch_interporation();
+            //  Portameneto Operation
+            let diff = self.target_pitch - self.base_pitch;
+            self.pitch_interporation(diff);
         }
         let delta_phase = self.base_pitch*self.cnt_ratio/msgf_if::SAMPLING_FREQ;
         let mut phase = self.next_phase;
