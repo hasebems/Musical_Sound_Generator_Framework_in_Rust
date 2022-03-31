@@ -63,12 +63,26 @@ impl Additive {
     pub fn change_pitch(&mut self, cnt_pitch:f32) {
         self.cnt_ratio = Osc::calc_cnt_pitch(cnt_pitch);
     }
-    fn wave_func(&self, phase: f32, y: usize) -> f32 {
-        let mut pls: f32 = 0.1;
-        let oti = if y <= 32 {y} else {32};
-        for j in 1..oti {
+    fn generate_filter(&self) -> [f32; 33] {
+        // 音程が上がるにつれ、倍音が減る割合を設定する
+        const CENTER_FREQ: f32 = 200.0; //[freq]
+        const REDUCED_RATE: f32 = 1.2;  // 0.5..2.0
+        let b: f32 = self.base_pitch/CENTER_FREQ;
+        let a: f32 = (CENTER_FREQ-self.base_pitch)*REDUCED_RATE/1000.0;
+        let mut flt: [f32; 33] = [0.0; 33];
+        for x in 0..33 {
+            flt[x] = a*(x as f32) + b;
+            if flt[x] < 0.0 {flt[x] = 0.0;}
+        }
+        flt
+    }
+    fn wave_func(&self, phase: f32, ot_num: usize, filter: [f32;33]) -> f32 {
+        let mut pls: f32 = 0.0;
+        for j in 0..ot_num {
             let ot:f32 = j as f32;
-            pls += msgf_table::PULSE0_1[j]*Osc::pseudo_sine(phase*ot+1.0);
+            pls += msgf_table::PULSE0_1[j]
+                   *filter[j]
+                   *Osc::pseudo_sine(phase*ot+1.0);
         }
         pls
     }
@@ -89,10 +103,11 @@ impl Additive {
         }
         let delta_phase = self.base_pitch*self.cnt_ratio/msgf_if::SAMPLING_FREQ;
         let mut phase = self.next_phase;
-        let max_overtone: usize = (msgf_table::ABORT_FREQUENCY/self.target_pitch) as usize;
-        //let wave_func: WvFn = self.get_wave_func();
+        let ot: usize = (msgf_table::ABORT_FREQUENCY/self.base_pitch) as usize;
+        let filter: [f32; 33] = self.generate_filter();
+        let max_overtone = if ot <= 32 {ot} else {32};
         for i in 0..abuf.sample_number {
-            let sample = self.wave_func(phase, max_overtone);
+            let sample = self.wave_func(phase, max_overtone, filter);
             abuf.set_abuf(i, sample*lvl_variable);
             let magnitude = lbuf.ctrl_for_audio(i)*self.pmd;
             phase += delta_phase*(2.0_f32.powf(magnitude));
