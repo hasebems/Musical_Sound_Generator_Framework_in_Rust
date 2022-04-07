@@ -37,6 +37,7 @@ pub struct InstSg {
     vol: u8,    //  0..127
     pan: f32,   //  -1..0..+1
     exp: u8,    //  0..127
+    spmsg: [u8;4],    //  special message for SG
     inst_prm: Rc<Cell<sg_prm::SynthParameter>>,
 }
 const NO_NOTE:i8 = -1;
@@ -86,10 +87,14 @@ impl msgf_inst::Inst for InstSg {
         if let Some(cur_vce) = &mut self.vce {
             cur_vce.slide(dt2, dt3);
         }
-        else {
+        else {// 1st Note On
             let mut new_vce = Box::new(
                 sg_voice::VoiceSg::new(dt2, dt3, 
                     self.mdlt, self.pit, self.vol, self.exp, Rc::clone(&self.inst_prm)));
+            // Send Special Message to new voice
+            for i in 0..self.spmsg.len() {
+                new_vce.set_prm(i as u8, self.spmsg[i]);
+            }
             new_vce.start_sound();
             self.vce = Some(new_vce);
         }
@@ -141,8 +146,12 @@ impl msgf_inst::Inst for InstSg {
         }
     }
     fn set_prm(&mut self, prm_type: u8, value: u8) {
-        if let Some(cur_vce) = &mut self.vce {
-            cur_vce.set_prm(prm_type, value)
+        let idx: usize = prm_type as usize;
+        if idx <= self.spmsg.len() {
+            self.spmsg[idx] = value;
+            if let Some(cur_vce) = &mut self.vce {
+                cur_vce.set_prm(prm_type, value)
+            }
         }
     }
     fn process(&mut self,
@@ -193,6 +202,7 @@ impl InstSg {
             vol,
             pan: Self::calc_pan(pan),
             exp,
+            spmsg: [0,0,0,0],
             inst_prm: prm,
         }
     }

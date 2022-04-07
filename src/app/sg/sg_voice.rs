@@ -107,8 +107,10 @@ impl msgf_voice::Voice for VoiceSg {
     }
     fn set_prm(&mut self, prm_type: u8, value: u8) {
         match prm_type {
-            0 => self.lfo.set_freq(value),
-            1 => self.lfo.set_wave(value),
+            0 => self.lfo.set_freq(value),  // 16 : LFO freq.
+            1 => self.lfo.set_wave(value),  // 17 : LFO Wave
+            2 => self.osc.change_f1(200.0+(value as f32)*5.0),  // 18 : 1st Formant
+            3 => self.osc.change_f2(800.0+(value as f32)*12.0), // 19 : 2nd Formant
             _ => ()
         }
     }
