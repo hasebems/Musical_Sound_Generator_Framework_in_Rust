@@ -78,18 +78,25 @@ impl Additive {
     pub fn change_f1(&mut self, f1:f32) {self.f1 = f1;}
     pub fn change_f2(&mut self, f2:f32) {self.f2 = f2;}
     fn formant_filter(&self, pitch:f32) -> [f32; 33] {
-        // f1,f2 から各倍音のレベルを 0.5..1.5 の間で変化させる
+        //  各倍音に一番近いフォルマントを探し、そのフォルマントから
+        //  各倍音のレベルを 0.5..1.5 の間で生成する
         const Q_VAL: f32 = 150.0;
+        const F4: f32 = 3500.0;
+        let f1: f32 = if pitch > 400.0 {self.f1 + (pitch-400.0)*0.5} else {self.f1};
+        let f2: f32 = if pitch > 400.0 {self.f2 + (pitch-400.0)*0.5} else {self.f2};
+        let f3: f32 = if f2 > 1900.0 {f2+600.0} else {2500.0};
         let mut flt: [f32; 33] = [0.5; 33];
-        for x in 0..33 {
-            let otp = pitch*(x as f32);
-            // Gaussian function = exp(-x^2/(2*sigma^2))
-            let x1 = otp-self.f1;
-            let x2 = otp-self.f2;
-            let y1 = (-(x1*x1)/(2.0*Q_VAL*Q_VAL)).exp() + 0.5;
-            let y2 = (-(x2*x2)/(2.0*Q_VAL*Q_VAL)).exp() + 0.5;
-            if y1 > y2 {flt[x] = y1;}
-            else {flt[x] = y2;}
+        // Gaussian function = exp(-x^2/(2*sigma^2))
+        let gaussian_func = |x:f32| {(-(x*x)/(2.0*Q_VAL*Q_VAL)).exp()*1.4 + 0.1};
+        for i in 0..33 {
+            let otp = pitch*(i as f32);
+            if      otp < self.f1               {flt[i]=gaussian_func(otp-f1);}
+            else if otp < (self.f1+self.f2)/2.0 {flt[i]=gaussian_func(otp-f1);}
+            else if otp < self.f2               {flt[i]=gaussian_func(otp-f2);}
+            else if otp < (self.f2+f3)/2.0      {flt[i]=gaussian_func(otp-f2);}
+            else if otp < f3                    {flt[i]=gaussian_func(otp-f3);}
+            else if otp < (f3+F4)/2.0           {flt[i]=gaussian_func(otp-f3);}
+            else                                {flt[i]=gaussian_func(otp-F4);}
         }
         flt
     }
