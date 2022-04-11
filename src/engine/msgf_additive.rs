@@ -153,7 +153,7 @@ impl Additive {
         let max_overtone = if ot <= 32 {ot} else {32};
         for i in 0..abuf.sample_number {
             let sample = self.wave_func(phase, max_overtone, filter);
-            abuf.set_abuf(i, sample*lvl_variable);
+            abuf.set_val(i, sample*lvl_variable);
             let magnitude = lbuf.ctrl_for_audio(i)*self.pmd;
             phase += delta_phase*(2.0_f32.powf(magnitude));
             while phase > 1.0 { phase -= 1.0 }

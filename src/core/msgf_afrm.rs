@@ -71,7 +71,7 @@ impl AudioFrame {
             self.abuf[i] = 0.0;
         }
     }
-    pub fn set_abuf(&mut self, num: usize, val: f32) {
+    pub fn set_val(&mut self, num: usize, val: f32) {
         let newval = Self::limit_check(val, 0.0);
         self.abuf[num] = newval;
     }
