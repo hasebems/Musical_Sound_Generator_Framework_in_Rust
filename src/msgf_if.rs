@@ -9,6 +9,7 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::core::*;
+use crate::engine::*;
 
 //---------------------------------------------------------
 //		Constants
@@ -32,6 +33,7 @@ pub struct Msgf {
     audio_buffer_send_effect_r: msgf_afrm::AudioFrame,
     audio_buffer_total_effect_l: msgf_afrm::AudioFrame,
     audio_buffer_total_effect_r: msgf_afrm::AudioFrame,
+    delay: msgf_sd_delay::SdDelay,
     in_number_frames: u32,
 }
 //---------------------------------------------------------
@@ -39,6 +41,11 @@ pub struct Msgf {
 //---------------------------------------------------------
 impl Msgf {
     pub fn new() -> Self {
+        let dprm = msgf_delay::DelayParameter {
+            l_time: 0.15,        //  0.0 - 1.0 [sec]
+            r_time: 0.16,        //  0.0 - 1.0 [sec]
+            att_ratio: 0.4,
+        };        
         let mut msgf = Self {
             msg_buf: Vec::new(),
             part: Vec::new(),
@@ -48,6 +55,7 @@ impl Msgf {
             audio_buffer_send_effect_r: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
             audio_buffer_total_effect_l: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
             audio_buffer_total_effect_r: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
+            delay: msgf_sd_delay::SdDelay::new(&dprm),
             in_number_frames: 0,
         };
         for _ in 0..MAX_PART_NUM {
@@ -122,11 +130,11 @@ impl Msgf {
             self.audio_buffer_total_effect_l.mix_and_check_no_sound(&mut self.audio_buffer_send_effect_l);  // L
             self.audio_buffer_total_effect_r.mix_and_check_no_sound(&mut self.audio_buffer_send_effect_r);  // R
         };
-        // Effect
-        self.audio_buffer_total_effect_l.clr_abuf();
-        self.audio_buffer_total_effect_r.clr_abuf();
+        //  Send Effect  in:total_effect -> out:send_effect
+        self.delay.process([&mut self.audio_buffer_total_effect_l, &mut self.audio_buffer_total_effect_r],
+                           [&mut self.audio_buffer_send_effect_l, &mut self.audio_buffer_send_effect_r]);
         //  sysbuf に足す
-        self.audio_buffer_total_effect_l.add_to_sysbuf(abuf_l);  // L
-        self.audio_buffer_total_effect_r.add_to_sysbuf(abuf_r);  // R
+        self.audio_buffer_send_effect_l.add_to_sysbuf(abuf_l);  // L
+        self.audio_buffer_send_effect_r.add_to_sysbuf(abuf_r);  // R
     }
 }
