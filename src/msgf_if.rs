@@ -21,6 +21,9 @@ pub const SAMPLING_FREQ: f32 = 44100.0;
 pub const PI: f32 = std::f32::consts::PI;
 pub const AUDIO_FRAME_PER_CONTROL: usize = 128;
 pub const DAMP_LIMIT_DEPTH: f32 = 0.0001;
+pub const TOTAL_EFF_DLY_TIME_L: f32 = 0.25;
+pub const TOTAL_EFF_DLY_TIME_R: f32 = 0.27;
+pub const TOTAL_EFF_ATT_RATE: f32 = 0.3;
 //---------------------------------------------------------
 //		Definition
 //---------------------------------------------------------
@@ -42,9 +45,9 @@ pub struct Msgf {
 impl Msgf {
     pub fn new() -> Self {
         let dprm = msgf_delay::DelayParameter {
-            l_time: 0.15,        //  0.0 - 1.0 [sec]
-            r_time: 0.16,        //  0.0 - 1.0 [sec]
-            att_ratio: 0.4,
+            l_time: TOTAL_EFF_DLY_TIME_L,   //  0.0 - 1.0 [sec]
+            r_time: TOTAL_EFF_DLY_TIME_R,   //  0.0 - 1.0 [sec]
+            att_ratio: TOTAL_EFF_ATT_RATE,
         };        
         let mut msgf = Self {
             msg_buf: Vec::new(),
@@ -108,7 +111,9 @@ impl Msgf {
         self.audio_buffer_send_effect_r.set_sample_number(in_number_frames as usize);
         self.audio_buffer_total_effect_l.set_sample_number(in_number_frames as usize);
         self.audio_buffer_total_effect_r.set_sample_number(in_number_frames as usize);
-        if MAX_PART_NUM >= 1 {      //  Part 1 は copy
+        if MAX_PART_NUM >= 1 {
+            //  Dry Sound:      Part 1 は copy
+            //  Total Effect:   total_effect 用のバッファに直接書き込み
             self.part[0].process(
                 &mut self.audio_buffer_l,
                 &mut self.audio_buffer_r,
@@ -118,22 +123,26 @@ impl Msgf {
             self.audio_buffer_l.copy_to_sysbuf(abuf_l);  // L
             self.audio_buffer_r.copy_to_sysbuf(abuf_r);  // R
         }
-        for i in 1..MAX_PART_NUM { //  Part 2 以降は add
+        for i in 1..MAX_PART_NUM {
+            //  Dry Sound:      Part 2 以降は add, 
+            //  Total Effect:   send_effect に入れたものを total_effect に足し込む
             self.part[i].process(
                 &mut self.audio_buffer_l,
                 &mut self.audio_buffer_r,
                 &mut self.audio_buffer_send_effect_l,
                 &mut self.audio_buffer_send_effect_r,
                 in_number_frames as usize);
+            //  Dry Sound を Sysbuf に足し込む
             self.audio_buffer_l.add_to_sysbuf(abuf_l);  // L
             self.audio_buffer_r.add_to_sysbuf(abuf_r);  // R
+            //  Send を足し合わせる  in:send_effect -> out:total_effect
             self.audio_buffer_total_effect_l.mix_and_check_no_sound(&mut self.audio_buffer_send_effect_l);  // L
             self.audio_buffer_total_effect_r.mix_and_check_no_sound(&mut self.audio_buffer_send_effect_r);  // R
         };
-        //  Send Effect  in:total_effect -> out:send_effect
+        //  Total Effect をかける in:total_effect -> out:send_effect
         self.delay.process([&mut self.audio_buffer_total_effect_l, &mut self.audio_buffer_total_effect_r],
                            [&mut self.audio_buffer_send_effect_l, &mut self.audio_buffer_send_effect_r]);
-        //  sysbuf に足す
+        //  Total Effect を sysbuf に足す
         self.audio_buffer_send_effect_l.add_to_sysbuf(abuf_l);  // L
         self.audio_buffer_send_effect_r.add_to_sysbuf(abuf_r);  // R
     }
