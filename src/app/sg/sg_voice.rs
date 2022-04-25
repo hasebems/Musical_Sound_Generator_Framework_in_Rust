@@ -109,8 +109,8 @@ impl msgf_voice::Voice for VoiceSg {
         match prm_type {
             0 => self.lfo.set_freq(value),  // 16 : LFO freq.
             1 => self.lfo.set_wave(value),  // 17 : LFO Wave
-            2 => self.osc.change_f1(200.0+(value as f32)*5.0),  // 18 : 1st Formant
-            3 => self.osc.change_f2(800.0+(value as f32)*12.0), // 19 : 2nd Formant
+            2 => self.osc.change_f1(200.0+(value as f32)*5.0),  // 18 : 1st Formant(200-840)
+            3 => self.osc.change_f2(800.0+(value as f32)*12.0), // 19 : 2nd Formant(800-2336)
             _ => ()
         }
     }

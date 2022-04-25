@@ -82,16 +82,19 @@ impl Additive {
         //  各倍音のレベルを 0.5..1.5 の間で生成する
         const Q_VAL: f32 = 150.0;
         const F4: f32 = 3500.0;
+        //  フォルマント周波数の微修正（基本ピッチによって少し高めにする）
         let f1: f32 = if pitch > 400.0 {self.f1 + (pitch-400.0)*0.5} else {self.f1};
         let f2: f32 = if pitch > 400.0 {self.f2 + (pitch-400.0)*0.5} else {self.f2};
         let f3: f32 = if f2 > 1900.0 {f2+600.0} else {2500.0};
-        let mut flt: [f32; 33] = [0.5; 33];
+        //  各倍音にかける値
+        let mut flt: [f32; 33] = [0.0; 33];
         // Gaussian function = exp(-x^2/(2*sigma^2))
-        let gaussian_func = |x:f32| {(-(x*x)/(2.0*Q_VAL*Q_VAL)).exp()*1.4 + 0.1};
+        //  上記関数の出力は 0-1 なので、これを 0.5-2.0 に変える
+        let gaussian_func = |x:f32| {(-(x*x)/(2.0*Q_VAL*Q_VAL)).exp()*1.5 + 0.5};
         for i in 0..33 {
             let otp = pitch*(i as f32);
             if      otp < self.f1               {flt[i]=gaussian_func(otp-f1);}
-            else if otp < (self.f1+self.f2)/2.0 {flt[i]=gaussian_func(otp-f1);}
+            else if otp < (self.f1+self.f2)/2.0 {flt[i]=gaussian_func(otp-f1);}//f1とf2の間でf1寄り
             else if otp < self.f2               {flt[i]=gaussian_func(otp-f2);}
             else if otp < (self.f2+f3)/2.0      {flt[i]=gaussian_func(otp-f2);}
             else if otp < f3                    {flt[i]=gaussian_func(otp-f3);}
@@ -123,13 +126,13 @@ impl Additive {
     }
     fn wave_func(&self, phase: f32, ot_num: usize, filter: [f32;33]) -> f32 {
         let mut pls: f32 = 0.0;
+        const PHASE_STREWING: f32 = 0.01;
         for j in 0..ot_num {
-            let ot:f32 = j as f32;
             pls += msgf_table::PULSE0_1[j]
                    *filter[j]
-                   *Osc::pseudo_sine(phase*ot+1.0);
+                   *Osc::pseudo_sine(phase*(j as f32)+PHASE_STREWING); 
         }
-        pls
+        pls*4.0 // 音量嵩上げ
     }
     fn pitch_interporation(&mut self, diff: f32) {
         //  Pitch Operation for Portamento
