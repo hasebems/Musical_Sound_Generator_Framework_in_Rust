@@ -27,7 +27,10 @@ This software is released under the MIT License, see LICENSE.txt.
     - CC#12 : Note Shift
     - CC#13 : Tune
     - CC#16-31 : Instrument Parameter
+    - CC#91 : Reverb Send
 - Program Change Number
+    - #0-#7 : Virtual Analog(va)
+    - #8    : Sing(sg)
 - Pitch Bend
 
 ## Contents of each folder

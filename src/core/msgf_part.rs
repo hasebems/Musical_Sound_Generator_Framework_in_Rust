@@ -28,6 +28,7 @@ pub struct Part {
     cc64_sustain: u8,
     cc65_portamento: u8,
     cc66_sostenuto: u8,
+    cc91_revsend: u8,
     _cc126_mono: u8,
     program_number: u8,
     pitch_bend_value: i16,
@@ -54,6 +55,7 @@ impl Part {
             cc64_sustain: 0,
             cc65_portamento: 0,
             cc66_sostenuto: 0,
+            cc91_revsend: 127,
             _cc126_mono: 1,
             program_number: 0,
             pitch_bend_value: 0,
@@ -106,6 +108,7 @@ impl Part {
             }
             65 => self.cc65_portamento = value,
             66 => self.cc66_sostenuto = value,
+            91 => self.cc91_revsend = value,
             120 => {
                 if value == 0 {
                     self.inst.all_sound_off();
@@ -150,7 +153,8 @@ impl Part {
         self.inst.process(abuf_l, abuf_r, in_number_frames);
         abuf_eff_l.clr_abuf();
         abuf_eff_r.clr_abuf();
-        abuf_eff_l.mul_and_mix(abuf_l, 1.0);    //  effect send L
-        abuf_eff_r.mul_and_mix(abuf_r, 1.0);    //  effect send R
+        let send: f32 = (self.cc91_revsend as f32)/128.0;
+        abuf_eff_l.mul_and_mix(abuf_l, send);    //  effect send L
+        abuf_eff_r.mul_and_mix(abuf_r, send);    //  effect send R
     }
 }
