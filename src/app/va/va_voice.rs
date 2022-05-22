@@ -17,11 +17,6 @@ use crate::engine::*;
 use crate::app::va::*;
 
 //---------------------------------------------------------
-//		Constants
-//---------------------------------------------------------
-const DAMP_TIME: u32 = 300;		// * dac time(22.68usec)
-
-//---------------------------------------------------------
 //		Definition
 //---------------------------------------------------------
 pub struct VoiceVa {
@@ -94,7 +89,7 @@ impl msgf_voice::Voice for VoiceVa {
             let aeg = aegbuf.ctrl_for_audio(i);
             abuf.mul_rate(i, self.max_note_vol*aeg);
         }
-        self.manage_note_level(abuf, aegbuf)
+        msgf_voice::manage_note_level(self, abuf, aegbuf)
     }
     fn set_prm(&mut self, prm_type: u8, value: u8) {
         match prm_type {
@@ -103,6 +98,11 @@ impl msgf_voice::Voice for VoiceVa {
             _ => ()
         }
     }
+    fn put_lvl_check_buf(&mut self, lvl: f32) {self.lvl_check_buf.put_into_abuf(lvl);}
+    fn damp_counter(&self) -> u32 {self.damp_counter}
+    fn add_damp_counter(&mut self, num: u32) {self.damp_counter+=num;}
+    fn ended(&self) -> bool {self.ended}
+    fn set_ended(&mut self, which: bool) {self.ended = which;}
 }
 
 impl VoiceVa {
@@ -127,32 +127,5 @@ impl VoiceVa {
         let vol_sq = vol as f32;
         let total_vol = 0.5f32.powf(4.0);    // 4bit margin
         (total_vol*vol_sq*exp_sq)/16384.0
-    }
-    fn manage_note_level(&mut self, abuf: &mut msgf_afrm::AudioFrame, aegbuf: &mut msgf_cfrm::CtrlFrame) -> bool {
-        if self.status != NoteStatus::DuringDamp {
-            //	Check Level
-            let level = aegbuf.get_max_level();
-            self.lvl_check_buf.put_into_abuf(level);
-            if msgf_if::DAMP_LIMIT_DEPTH > level {
-                println!("Damped!");
-                self.damp();
-            }
-        } else {    //	Damp
-            for snum in 0..abuf.sample_number {
-                let mut rate: f32 = 0.0;
-                if self.damp_counter <= DAMP_TIME {
-                    let cntdwn = DAMP_TIME - self.damp_counter;
-                    rate = (cntdwn as f32)/(DAMP_TIME as f32);
-                    rate *= rate;
-                }
-                abuf.mul_rate(snum, rate);
-                self.damp_counter += 1;
-                if self.damp_counter > DAMP_TIME {
-                    self.ended = true;
-                    break;
-                }
-            }
-        }
-        self.ended
     }
 }
