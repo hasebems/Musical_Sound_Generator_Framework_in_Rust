@@ -42,7 +42,7 @@ pub trait Voice {
     //  Setter/Getter
     fn put_lvl_check_buf(&mut self, lvl: f32);
     fn damp_counter(&self) -> u32;
-    fn add_damp_counter(&mut self, num: u32);
+    fn inc_damp_counter(&mut self);
     fn ended(&self) -> bool;
     fn set_ended(&mut self, which: bool);
 }
@@ -69,7 +69,7 @@ pub fn manage_note_level<T: Voice>(t: &mut T,
                 rate *= rate;
             }
             abuf.mul_rate(snum, rate);
-            t.add_damp_counter(1);
+            t.inc_damp_counter();
             if t.damp_counter() > DAMP_TIME {
                 t.set_ended(true);
                 break;

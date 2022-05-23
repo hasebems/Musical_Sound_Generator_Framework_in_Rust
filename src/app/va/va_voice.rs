@@ -100,7 +100,7 @@ impl msgf_voice::Voice for VoiceVa {
     }
     fn put_lvl_check_buf(&mut self, lvl: f32) {self.lvl_check_buf.put_into_abuf(lvl);}
     fn damp_counter(&self) -> u32 {self.damp_counter}
-    fn add_damp_counter(&mut self, num: u32) {self.damp_counter+=num;}
+    fn inc_damp_counter(&mut self) {self.damp_counter+=1;}
     fn ended(&self) -> bool {self.ended}
     fn set_ended(&mut self, which: bool) {self.ended = which;}
 }
