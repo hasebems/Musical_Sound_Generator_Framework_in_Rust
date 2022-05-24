@@ -32,6 +32,8 @@ pub struct VoiceSg {
     lfo: msgf_lfo::Lfo,
     max_note_vol: f32,
     ended: bool,
+    vowel_x: f32,   // -1..0..1
+    vowel_y: f32,   // -1..0..1
 }
 //---------------------------------------------------------
 //		Implements
@@ -104,8 +106,8 @@ impl msgf_voice::Voice for VoiceSg {
         match prm_type {
             0 => self.lfo.set_freq(value),  // 16 : LFO freq.
             1 => self.lfo.set_wave(value),  // 17 : LFO Wave
-            2 => self.osc.change_f1(200.0+(value as f32)*5.0),  // 18 : 1st Formant(200-840)
-            3 => self.osc.change_f2(800.0+(value as f32)*12.0), // 19 : 2nd Formant(800-2336)
+            2 => {self.vowel_x = (value as f32-64.0)/64.0; self.calc_formant();}
+            3 => {self.vowel_y = (value as f32-64.0)/64.0; self.calc_formant();}
             _ => ()
         }
     }
@@ -131,6 +133,8 @@ impl VoiceSg {
             lfo: msgf_lfo::Lfo::new(&tprm.lfo),
             max_note_vol: VoiceSg::calc_vol(vol, exp),
             ended: false,
+            vowel_x: 0.0,
+            vowel_y: 0.0,
         }
     }
     fn calc_vol(vol:u8, exp:u8) -> f32 {
@@ -138,5 +142,31 @@ impl VoiceSg {
         let vol_sq = vol as f32;
         let total_vol = 0.5f32.powf(4.0);    // 4bit margin
         (total_vol*vol_sq*exp_sq)/16384.0
+    }
+    fn calc_formant(&mut self) {
+        //  (0,0): a, (1,0):e, (-1,0):i, (0,1):u, (0,-1):o
+        let mut f1 = 800.0;
+        let mut f2 = 1200.0;
+        if self.vowel_x == 0.0 && self.vowel_y == 0.0 {}
+        else if self.vowel_y > self.vowel_x {
+            if self.vowel_y > -self.vowel_x {       /*a-u*/
+                f1-=500.0*self.vowel_y;
+            }
+            else {  /*a-i*/
+                f1+=500.0*self.vowel_x;
+                f2+=1100.0*self.vowel_x;
+            }
+        } else {
+            if self.vowel_y > -self.vowel_x {       /*a-e*/
+                f1-=300.0*self.vowel_x;
+                f2+=700.0*self.vowel_x;
+            }
+            else {  /*a-o*/
+                f1+=300.0*self.vowel_y;
+                f2+=300.0*self.vowel_y;
+            }
+        }
+        self.osc.change_f1(f1);
+        self.osc.change_f2(f2);
     }
 }
