@@ -27,7 +27,7 @@ pub struct VoiceSgf {
     damp_counter: u32,
     lvl_check_buf: msgf_afrm::AudioFrame,
     // Synth
-    osc: msgf_additive::Additive,
+    vcl: msgf_vocal::Vocal,
     flt: msgf_biquad::Biquad,
     aeg: msgf_aeg::Aeg,
     lfo: msgf_lfo::Lfo,
@@ -48,7 +48,7 @@ impl PartialEq for VoiceSgf {
 impl msgf_voice::Voice for VoiceSgf {
     fn start_sound(&mut self) {
         self.aeg.move_to_attack();
-        self.flt.set_lpf(1000.0, 8.0);
+        self.flt.set_lpf(5000.0, 1.0);
         self.lfo.start();
     }
     fn slide(&mut self, note:u8, vel:u8) {
@@ -56,7 +56,7 @@ impl msgf_voice::Voice for VoiceSgf {
         self.vel = vel;
         self.status = NoteStatus::DuringNoteOn;
         self.damp_counter = 0;
-        self.osc.change_note(note);
+        self.vcl.change_note(note);
         self.aeg.move_to_attack();
         self.lfo.start();
     }
@@ -67,13 +67,13 @@ impl msgf_voice::Voice for VoiceSgf {
     fn note_num(&self) -> u8 {self.note}
     fn velocity(&self) -> u8 {self.vel}
     fn change_pmd(&mut self, value: f32) {
-        self.osc.change_pmd(value);
+        self.vcl.change_pmd(value);
     }
     fn amplitude(&mut self, volume: u8, expression: u8) {
         self.max_note_vol = VoiceSgf::calc_vol(volume, expression);
     }
     fn pitch(&mut self, pitch:f32) {
-        self.osc.change_pitch(pitch);
+        self.vcl.change_pitch(pitch);
     }
     fn status(&self) -> NoteStatus {self.status}
     fn damp(&mut self) {
@@ -91,7 +91,7 @@ impl msgf_voice::Voice for VoiceSgf {
         self.lfo.process(lbuf);
 
         //  Oscillator
-        self.osc.process(abuf, lbuf);
+        self.vcl.process(abuf, lbuf);
 
         //  Filter
         self.flt.process(abuf);
@@ -109,10 +109,10 @@ impl msgf_voice::Voice for VoiceSgf {
     }
     fn set_prm(&mut self, prm_type: u8, value: u8) {
         match prm_type {
-            0 => self.lfo.set_freq(value),  // 16 : LFO freq.
-            1 => self.lfo.set_wave(value),  // 17 : LFO Wave
-            2 => {self.vowel_x = (value as f32-64.0)/64.0; self.calc_formant();}
-            3 => {self.vowel_y = (value as f32-64.0)/64.0; self.calc_formant();}
+            //0 => self.lfo.set_freq(value),  // 16 : LFO freq.
+            //1 => self.lfo.set_wave(value),  // 17 : LFO Wave
+            0 => {self.vowel_x = (value as f32-64.0)/64.0; self.calc_formant();}
+            1 => {self.vowel_y = (value as f32-64.0)/64.0; self.calc_formant();}
             _ => ()
         }
     }
@@ -124,7 +124,7 @@ impl msgf_voice::Voice for VoiceSgf {
 }
 
 impl VoiceSgf {
-    pub fn new(note:u8, vel:u8, _pmd:f32, pit:f32, vol:u8, exp:u8,
+    pub fn new(note:u8, vel:u8, pmd:f32, pit:f32, vol:u8, exp:u8,
         inst_prm: Rc<Cell<sgf_prm::SynthParameter>>) -> Self {
         let tprm: &sgf_prm::SynthParameter = &inst_prm.get();
         Self {
@@ -133,7 +133,7 @@ impl VoiceSgf {
             status: NoteStatus::DuringNoteOn,
             damp_counter: 0,
             lvl_check_buf: msgf_afrm::AudioFrame::new((msgf_if::SAMPLING_FREQ/100.0) as usize, msgf_if::MAX_BUFFER_SIZE),
-            osc: msgf_additive::Additive::new(&tprm.osc, note, pit),
+            vcl: msgf_vocal::Vocal::new(&tprm.osc, note, pmd, pit),
             flt: msgf_biquad::Biquad::new(),
             aeg: msgf_aeg::Aeg::new(&tprm.aeg),
             lfo: msgf_lfo::Lfo::new(&tprm.lfo),
@@ -149,7 +149,7 @@ impl VoiceSgf {
         let total_vol = 0.5f32.powf(4.0);    // 4bit margin
         (total_vol*vol_sq*exp_sq)/16384.0
     }
-    fn calc_formant(&mut self) {
+    fn calc_formant(&mut self) {/*
         //  (0,0): a, (1,0):e, (-1,0):i, (0,1):u, (0,-1):o
         let mut f1 = 800.0;
         let mut f2 = 1200.0;
@@ -172,7 +172,7 @@ impl VoiceSgf {
                 f2+=300.0*self.vowel_y;
             }
         }
-        self.osc.change_f1(f1);
-        self.osc.change_f2(f2);
+        self.vcl.change_f1(f1);
+        self.vcl.change_f2(f2);*/
     }
 }

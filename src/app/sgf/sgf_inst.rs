@@ -37,7 +37,7 @@ pub struct InstSgf {
     vol: u8,    //  0..127
     pan: f32,   //  -1..0..+1
     exp: u8,    //  0..127
-    spmsg: [u8;4],    //  special message for SG
+    spmsg: [u8;2],    //  special message for SGF [1st Fmnt, 2nd Fmnt]
     inst_prm: Rc<Cell<sgf_prm::SynthParameter>>,
 }
 const NO_NOTE:i8 = -1;
@@ -62,7 +62,7 @@ impl msgf_inst::Inst for InstSgf {
         }
         let _ = &self.inst_prm.replace(sgf_prm::SGF_TONE_PRM[inst_number]);
         self.inst_number = inst_number;
-        //self.mdlt = self.inst_prm.get().osc.lfo_depth;
+        self.mdlt = self.inst_prm.get().osc.lfo_depth;
         self.pit = 0.0;
         self.vol = vol;
         self.pan = Self::calc_pan(pan);
@@ -92,7 +92,7 @@ impl msgf_inst::Inst for InstSgf {
                 sgf_voice::VoiceSgf::new(dt2, dt3, 
                     self.mdlt, self.pit, self.vol, self.exp, Rc::clone(&self.inst_prm)));
             // Send Special Message to new voice
-            for i in 0..self.spmsg.len() {
+            for i in 0..self.spmsg.len() {  //  Formant のみ
                 new_vce.set_prm(i as u8, self.spmsg[i]);
             }
             new_vce.start_sound();
@@ -197,12 +197,12 @@ impl InstSgf {
             vce: None,
             active_vce_index: NO_NOTE,
             inst_number,
-            mdlt: 0.0,//prm.get().osc.lfo_depth,
+            mdlt: prm.get().osc.lfo_depth,
             pit: 0.0,
             vol,
             pan: Self::calc_pan(pan),
             exp,
-            spmsg: [0,0,0,0],
+            spmsg: [0,0],   //[1st Fmnt, 2nd Fmnt]
             inst_prm: prm,
         }
     }
