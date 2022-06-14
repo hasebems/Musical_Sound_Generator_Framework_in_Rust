@@ -109,10 +109,10 @@ impl msgf_voice::Voice for VoiceSgf {
     }
     fn set_prm(&mut self, prm_type: u8, value: u8) {
         match prm_type {
-            //0 => self.lfo.set_freq(value),  // 16 : LFO freq.
+            0 => self.lpf.set_lpf((value as f32)*20.0,1.0),  // 16 : LPF cutoff
             //1 => self.lfo.set_wave(value),  // 17 : LFO Wave
-            0 => {self.vowel_x = (value as f32-64.0)/64.0; self.calc_formant();}
-            1 => {self.vowel_y = (value as f32-64.0)/64.0; self.calc_formant();}
+            2 => {self.vowel_x = (value as f32-64.0)/64.0; self.calc_formant();}
+            3 => {self.vowel_y = (value as f32-64.0)/64.0; self.calc_formant();}
             _ => ()
         }
     }

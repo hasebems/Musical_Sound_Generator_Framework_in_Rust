@@ -37,7 +37,7 @@ pub struct InstSgf {
     vol: u8,    //  0..127
     pan: f32,   //  -1..0..+1
     exp: u8,    //  0..127
-    spmsg: [u8;2],    //  special message for SGF [1st Fmnt, 2nd Fmnt]
+    spmsg: [u8;4],    //  special message for SGF [1st Fmnt, 2nd Fmnt]
     inst_prm: Rc<Cell<sgf_prm::SynthParameter>>,
 }
 const NO_NOTE:i8 = -1;
@@ -202,7 +202,7 @@ impl InstSgf {
             vol,
             pan: Self::calc_pan(pan),
             exp,
-            spmsg: [0,0],   //[1st Fmnt, 2nd Fmnt]
+            spmsg: [0,0,0,0],   //[LPF, --, 1st Fmnt, 2nd Fmnt]
             inst_prm: prm,
         }
     }
