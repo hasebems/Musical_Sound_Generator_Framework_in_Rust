@@ -31,6 +31,7 @@ This software is released under the MIT License, see LICENSE.txt.
 - Program Change Number
     - #0-#7 : Virtual Analog(va)
     - #8    : Sing(sg)
+    - #9    : Sing by Filter(sgf)
 - Pitch Bend
 
 ## Contents of each folder
@@ -40,3 +41,5 @@ This software is released under the MIT License, see LICENSE.txt.
 - /src/engine: Singnal Processing & Cotrol Engine
 - /src/app: Soft Synth. Application
     - va: Virtual Analog Tone Generator
+    - sg: Sing Tone Generator
+    - sgf: Sing by Filter Tone Generator
