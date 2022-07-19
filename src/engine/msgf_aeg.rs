@@ -42,6 +42,7 @@ pub struct Aeg {
     crnt_rate: f32,
     interpolate_value: f32,
     release_rsv: bool,
+    last_value: f32,
 }
 //---------------------------------------------------------
 //		Implements
@@ -57,6 +58,7 @@ impl Aeg {
             crnt_rate: 1.0,
             interpolate_value: 0.0,
             release_rsv: false,
+            last_value: 0.0,
         }
     }
     pub fn move_to_attack(&mut self) {
@@ -117,7 +119,7 @@ impl Aeg {
         let mut intplt = self.interpolate_value;
         if intplt > 0.98 { // この数値で到達タイミングを調整
             intplt += STEP_BEFORE_REACHED;
-            if intplt > 1.0+STEP_BEFORE_REACHED {intplt = 1.0+STEP_BEFORE_REACHED;}
+            if intplt > 1.0 {intplt = 1.0;}
         } else {
             intplt += (1.0-intplt)*(self.crnt_rate);
         }
@@ -154,6 +156,10 @@ impl Aeg {
                 },
                 _ => {},
             }
+            //  AEG の動きでノイズが出ないように LPF をかける
+            let lpf_coef = 0.2;
+            eg_crnt = (1.0-lpf_coef)*self.last_value + lpf_coef*eg_crnt;
+            self.last_value = eg_crnt;
             cbuf.set_cbuf(i, eg_crnt);
             self.crnt_value = eg_crnt;
         }
