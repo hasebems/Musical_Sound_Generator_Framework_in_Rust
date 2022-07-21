@@ -54,7 +54,7 @@ impl Osc {
             next_phase: 0.0,
         }
     }
-    pub fn change_pmd(&mut self, value:f32) {self.pmd = value;}
+    pub fn change_pmd(&mut self, value:f32) {self.pmd = value;} // value: 1.0:1oct,-1.0:-1oct
     pub fn _change_note(&mut self, note:u8) {
         self.base_pitch = Osc::calc_base_pitch(self.prms_variable.coarse_tune,
                                             self.prms_variable.fine_tune, note);
