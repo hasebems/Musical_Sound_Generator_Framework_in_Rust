@@ -84,6 +84,7 @@ impl Msgf {
         match status {
             0x80 => pt.note_off(dt2, dt3),
             0x90 => if dt3 == 0 { pt.note_off(dt2, dt3);} else { pt.note_on(dt2, dt3);},
+            0xa0 => pt.per_note_after(dt2, dt3),
             0xb0 => pt.control_change(dt2, dt3),
             0xc0 => pt.program_change(dt2),
             0xe0 => {

@@ -69,6 +69,9 @@ impl Part {
     pub fn note_on(&mut self, dt2: u8, dt3: u8) {
         self.inst.note_on(dt2, dt3)
     }
+    pub fn per_note_after(&mut self, dt2: u8, dt3: u8) {
+        self.inst.per_note_after(dt2, dt3)
+    }
     pub fn control_change(&mut self, controller: u8, value: u8) {
         match controller {
             0 => self.cc0_msb = value,

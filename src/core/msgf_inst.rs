@@ -16,14 +16,15 @@ pub trait Inst {
     fn change_inst(&mut self, inst_number: usize, vol: u8, pan: u8, exp: u8);
     fn note_off(&mut self, dt2: u8, dt3: u8);
     fn note_on(&mut self, dt2: u8, dt3: u8);
-    fn modulation(&mut self, value: u8);
+    fn per_note_after(&mut self, _dt2: u8, _dt3: u8){}  // Default Implementations
+    fn modulation(&mut self, _value: u8){}              // Default Implementations
     fn volume(&mut self, value: u8);
-    fn pan(&mut self, value: u8);
-    fn expression(&mut self, value: u8);
+    fn pan(&mut self, _value: u8){}                     // Default Implementations
+    fn expression(&mut self, _value: u8){}              // Default Implementations
     fn pitch(&mut self, bend:i16, tune_coarse:u8, tune_fine:u8);
-    fn sustain(&mut self, value: u8);
+    fn sustain(&mut self, _value: u8){}                 // Default Implementations
     fn all_sound_off(&mut self);
-    fn set_prm(&mut self, prm_type: u8, value: u8); //  prm_type:0-15, value:0-127
+    fn set_prm(&mut self, _prm_type: u8, _value: u8){}  // prm_type:0-15, value:0-127
     //fn release_note(&mut self, nt: &msgf_voice::Voice);
     fn process(&mut self,
         abuf_l: &mut msgf_afrm::AudioFrame,

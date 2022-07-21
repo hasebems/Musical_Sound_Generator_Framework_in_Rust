@@ -90,6 +90,12 @@ impl msgf_inst::Inst for InstVa {
         new_voice.start_sound();
         self.vcevec.push(new_voice);
     }
+    fn per_note_after(&mut self, dt2: u8, dt3: u8) {
+        let nt = self.search_note( dt2, NoteStatus::DuringNoteOn);
+        if let Some(vce) = nt {
+            vce.change_pmd((dt3 as f32)/128.0);
+        }
+    }
     fn modulation(&mut self, value: u8) {
         let mdlt = 0.5f32*(value as f32)/127.0;
         self.mdlt = mdlt;
