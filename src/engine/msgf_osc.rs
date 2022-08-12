@@ -120,7 +120,7 @@ impl Osc {
                     for j in 1..y {
                         let ot:f32 = j as f32;
                         let phase:f32 = x * ot;
-                        saw += 0.1*Osc::pseudo_sine(phase)/ot;
+                        saw += 0.5*Osc::pseudo_sine(phase)/ot;
                     }
                     saw
                 };
