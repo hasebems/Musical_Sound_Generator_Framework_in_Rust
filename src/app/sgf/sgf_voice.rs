@@ -22,6 +22,7 @@ use crate::app::sgf::*;
 const DEFAULT_F1:f32 = 800.0;
 const DEFAULT_F2:f32 = 1200.0;
 const BPF_RESO:f32 = 3.0;
+const NOTE_OFFSET:u8 = 24;
 //---------------------------------------------------------
 pub struct VoiceSgf {
     // Note
@@ -41,6 +42,8 @@ pub struct VoiceSgf {
     ended: bool,
     vowel_x: f32,   // -1..0..1
     vowel_y: f32,   // -1..0..1
+    fmnt_adjust_vol: f32,   //  0..1
+    scl_adjust_vol: f32,    // 0..1
 }
 //---------------------------------------------------------
 //		Implements
@@ -60,19 +63,21 @@ impl msgf_voice::Voice for VoiceSgf {
         self.lfo.start();
     }
     fn slide(&mut self, note:u8, vel:u8) {
-        self.note = note;
+        let real_note = note - NOTE_OFFSET;
+        self.note = real_note;
         self.vel = vel;
         self.status = NoteStatus::DuringNoteOn;
         self.damp_counter = 0;
-        self.vcl.change_note(note);
+        self.vcl.change_note(note- NOTE_OFFSET);
         self.aeg.move_to_attack();
         self.lfo.start();
+        self.scl_adjust_vol = VoiceSgf::calc_scaling_vol(real_note);
     }
     fn note_off(&mut self) {
         self.status = NoteStatus::AfterNoteOff;
         self.aeg.move_to_release()
     }
-    fn note_num(&self) -> u8 {self.note}
+    fn note_num(&self) -> u8 {self.note + NOTE_OFFSET}
     fn velocity(&self) -> u8 {self.vel}
     fn change_pmd(&mut self, value: f32) {
         self.vcl.change_pmd(value);
@@ -111,9 +116,10 @@ impl msgf_voice::Voice for VoiceSgf {
         self.aeg.process(aegbuf);
 
         //  Volume
+        let tmpvol = self.max_note_vol*self.fmnt_adjust_vol*self.scl_adjust_vol;
         for i in 0..abuf.sample_number {
             let aeg = aegbuf.ctrl_for_audio(i);
-            abuf.mul_rate(i, self.max_note_vol*aeg);
+            abuf.mul_rate(i, tmpvol*aeg);
         }
         msgf_voice::manage_note_level(self, abuf, aegbuf)
     }
@@ -134,16 +140,17 @@ impl msgf_voice::Voice for VoiceSgf {
 }
 
 impl VoiceSgf {
-    pub fn new(note:u8, vel:u8, pmd:f32, pit:f32, vol:u8, exp:u8,
+    pub fn new(org_note:u8, vel:u8, pmd:f32, pit:f32, vol:u8, exp:u8,
         inst_prm: Rc<Cell<sgf_prm::SynthParameter>>) -> Self {
         let tprm: &sgf_prm::SynthParameter = &inst_prm.get();
+        let real_note = org_note - NOTE_OFFSET;
         Self {
-            note,
+            note: real_note,
             vel,
             status: NoteStatus::DuringNoteOn,
             damp_counter: 0,
             lvl_check_buf: msgf_afrm::AudioFrame::new((msgf_if::SAMPLING_FREQ/100.0) as usize, msgf_if::MAX_BUFFER_SIZE),
-            vcl: msgf_vocal::Vocal::new(&tprm.osc, note, pmd, pit),
+            vcl: msgf_vocal::Vocal::new(&tprm.osc, real_note, pmd, pit),
             lpf: msgf_biquad::Biquad::new(),
             frm1: msgf_biquad::Biquad::new(),
             frm2: msgf_biquad::Biquad::new(),
@@ -153,7 +160,12 @@ impl VoiceSgf {
             ended: false,
             vowel_x: 0.0,
             vowel_y: 0.0,
+            fmnt_adjust_vol: 1.0,
+            scl_adjust_vol: VoiceSgf::calc_scaling_vol(real_note),
         }
+    }
+    fn calc_scaling_vol(note:u8) -> f32 {
+        1.0 - 0.01*((note as f32)-60.0)
     }
     fn calc_vol(vol:u8, exp:u8) -> f32 {
         let exp_sq = exp as f32;
@@ -165,23 +177,29 @@ impl VoiceSgf {
         //  (0,0): a, (1,0):e, (-1,0):i, (0,1):u, (0,-1):o
         let mut f1 = DEFAULT_F1;
         let mut f2 = DEFAULT_F2;
-        if self.vowel_x == 0.0 && self.vowel_y == 0.0 {}
+        if self.vowel_x == 0.0 && self.vowel_y == 0.0 {
+            self.fmnt_adjust_vol = 1.0;
+        }
         else if self.vowel_y > self.vowel_x {
             if self.vowel_y > -self.vowel_x {   /*a->u*/
-                f1-=500.0*self.vowel_y;
+                f1-=500.0*self.vowel_y; // y:0->1, 800->300
+                self.fmnt_adjust_vol = 1.0 + self.vowel_y*0.3;
             }
             else {                              /*a->i*/
-                f1+=500.0*self.vowel_x;
-                f2-=1100.0*self.vowel_x;
+                f1+=500.0*self.vowel_x; // x:0->-1, 800->300
+                f2-=1100.0*self.vowel_x;// 1200->2300
+                self.fmnt_adjust_vol = 1.0 - self.vowel_x*0.3;
             }
         } else {
             if self.vowel_y > -self.vowel_x {   /*a->e*/
-                f1-=300.0*self.vowel_x;
-                f2+=700.0*self.vowel_x;
+                f1-=300.0*self.vowel_x; // x:0->1, 800->500
+                f2+=700.0*self.vowel_x; // 1200->1900
+                self.fmnt_adjust_vol = 1.0;
             }
             else {                              /*a->o*/
-                f1+=300.0*self.vowel_y;
-                f2+=400.0*self.vowel_y;
+                f1+=300.0*self.vowel_y;  // y:0->-1, 800->500
+                f2+=400.0*self.vowel_y;  // 1200->800
+                self.fmnt_adjust_vol = 1.0 + self.vowel_y*0.5;
             }
         }
         self.frm1.set_bpf(f1, BPF_RESO);
