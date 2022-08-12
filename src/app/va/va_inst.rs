@@ -19,6 +19,10 @@ use crate::app::va::*;
 //---------------------------------------------------------
 //		Definition
 //---------------------------------------------------------
+const MAX_PB_RANGE:f32 = 1200.0;
+const MIDI_MAX_PB_VAL:f32 = 8192.0;
+const MIDI_CENTER_VAL:f32 = 64.0;
+//---------------------------------------------------------
 pub struct InstVa {
     vce_audio: msgf_afrm::AudioFrame,
     inst_audio: msgf_afrm::AudioFrame,
@@ -115,7 +119,9 @@ impl msgf_inst::Inst for InstVa {
         self.vcevec.iter_mut().for_each(|vce| vce.amplitude(vol, value));
     }
     fn pitch(&mut self, bend:i16, tune_coarse:u8, tune_fine:u8) {
-        let pit:f32 = ((bend as f32)*200.0)/8192.0 + ((tune_coarse as f32)-64.0)*100.0 + ((tune_fine as f32)-64.0)*100.0/64.0;
+        let pit:f32 = ((bend as f32)*MAX_PB_RANGE)/MIDI_MAX_PB_VAL
+            + ((tune_coarse as f32)-MIDI_CENTER_VAL)*100.0 
+            + ((tune_fine as f32)-MIDI_CENTER_VAL)*100.0/MIDI_CENTER_VAL;
         self.pit = pit;
         self.vcevec.iter_mut().for_each(|vce| vce.pitch(pit));
     }
