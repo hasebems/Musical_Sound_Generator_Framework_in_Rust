@@ -15,6 +15,7 @@ use crate::engine::*;
 //		Constants
 //---------------------------------------------------------
 //  configuration
+pub const REV_NUM: &str = "rev.0-0-4";
 pub const MAX_PART_NUM: usize = 10;
 pub const MAX_BUFFER_SIZE: usize = 1024;
 pub const SAMPLING_FREQ: f32 = 44100.0;
@@ -64,6 +65,7 @@ impl Msgf {
         for _ in 0..MAX_PART_NUM {
             msgf.part.push(msgf_part::Part::new());
         };
+        println!("{}", REV_NUM);
         msgf
     }
     pub fn recieve_midi_message(&mut self, dt1: u8, dt2: u8, dt3: u8) {
