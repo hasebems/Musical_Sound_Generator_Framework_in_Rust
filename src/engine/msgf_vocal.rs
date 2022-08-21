@@ -27,7 +27,7 @@ pub struct VocalParameter {
 //---------------------------------------------------------
 pub struct Vocal {
     prms_variable: VocalParameter,
-    pmd: f32,
+    pmd: f32,           //  1.0: 1200[cent]
     base_pitch: f32,    //  [Hz]
     cnt_ratio: f32,     //  ratio of Hz
     next_phase: f32,    //  0.0 - 1.0

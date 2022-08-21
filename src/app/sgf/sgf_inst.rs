@@ -106,8 +106,21 @@ impl msgf_inst::Inst for InstSgf {
         self.vcevec.push(NoteSgf::new(dt2, dt3));
         self.active_vce_index = (self.vcevec.len() as i8)-1; // the last order
     }
+    fn per_note_after(&mut self, note: u8, val: u8) {
+        let nt_idx = self.search_note(note);
+        if nt_idx == NO_NOTE {return}
+        if nt_idx == self.active_vce_index {
+            // sounding voice
+            if let Some(cur_vce) = &mut self.vce {
+                let mdlt: f32 = InstSgf::calc_pmd(val);
+                self.mdlt = mdlt;
+                cur_vce.change_pmd(mdlt);
+            }
+            self.vcevec[nt_idx as usize].off = true;
+        }
+    }
     fn modulation(&mut self, value: u8) {
-        let mdlt = 0.5f32*(value as f32)/127.0;
+        let mdlt = InstSgf::calc_pmd(value);
         self.mdlt = mdlt;
         if let Some(cur_vce) = &mut self.vce {
             cur_vce.change_pmd(mdlt);
@@ -208,7 +221,10 @@ impl InstSgf {
     }
     fn calc_pan(mut value:u8) -> f32 {
         if value == 127 {value = 128;}
-        (value as f32)/128.0
+        (value as f32)/127.0
+    }
+    fn calc_pmd(value:u8) -> f32 {
+        0.5f32*(value as f32)/(127.0*6.0)     // MAX:+-200[cent]
     }
     fn search_note(&mut self, note_num: u8) -> i8 {
         let max_note = self.vcevec.len();
