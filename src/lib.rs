@@ -18,7 +18,8 @@ mod app;
 
 #[no_mangle]
 pub extern "C" fn rust_msgf_new() -> *mut msgf_if::Msgf {
-    let ptr = Box::new(msgf_if::Msgf::new());
+    let mut ptr = Box::new(msgf_if::Msgf::new());
+    ptr.init();
     Box::into_raw(ptr)
 }
 #[no_mangle]

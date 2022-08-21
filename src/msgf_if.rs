@@ -10,12 +10,13 @@
 //
 use crate::core::*;
 use crate::engine::*;
+use crate::core::msgf_disp::Display;
 
 //---------------------------------------------------------
 //		Constants
 //---------------------------------------------------------
 //  configuration
-pub const REV_NUM: &str = "rev.0-0-4";
+pub const REV_NUM: &str = "rev.0-0-7";
 pub const MAX_PART_NUM: usize = 10;
 pub const MAX_BUFFER_SIZE: usize = 1024;
 pub const SAMPLING_FREQ: f32 = 44100.0;
@@ -43,6 +44,7 @@ pub struct Msgf {
 //---------------------------------------------------------
 //		Implements
 //---------------------------------------------------------
+impl msgf_disp::Display for Msgf {}
 impl Msgf {
     pub fn new() -> Self {
         let dprm = msgf_delay::DelayParameter {
@@ -50,7 +52,7 @@ impl Msgf {
             r_time: TOTAL_EFF_DLY_TIME_R,   //  0.0 - 1.0 [sec]
             att_ratio: TOTAL_EFF_ATT_RATE,
         };        
-        let mut msgf = Self {
+        let msgf = Self {
             msg_buf: Vec::new(),
             part: Vec::new(),
             audio_buffer_l: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
@@ -62,11 +64,13 @@ impl Msgf {
             delay: msgf_sd_delay::SdDelay::new(&dprm),
             in_number_frames: 0,
         };
-        for _ in 0..MAX_PART_NUM {
-            msgf.part.push(msgf_part::Part::new());
-        };
-        println!("{}", REV_NUM);
         msgf
+    }
+    pub fn init(&mut self) {    // call this fn just after new()
+        for _ in 0..MAX_PART_NUM {
+            self.part.push(msgf_part::Part::new());
+        };
+        self.print_str(REV_NUM);
     }
     pub fn recieve_midi_message(&mut self, dt1: u8, dt2: u8, dt3: u8) {
         let ch: usize = (dt1 & 0x0f).into();
@@ -104,7 +108,7 @@ impl Msgf {
       in_number_frames: u32) {
         self.parse_msg();   // MIDI message
         if self.in_number_frames != in_number_frames {
-            println!("Audio Buffer: {}",in_number_frames);
+            self.print_prm("Audio Buffer: ", in_number_frames);
             self.in_number_frames = in_number_frames;
         }
         self.audio_buffer_l.set_sample_number(in_number_frames as usize);
