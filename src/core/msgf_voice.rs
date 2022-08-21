@@ -10,7 +10,7 @@
 //
 use crate::core::*;
 use crate::msgf_if;
-
+use crate::core::msgf_disp::MsgfDisplay;
 //---------------------------------------------------------
 //		Constants
 //---------------------------------------------------------
@@ -49,7 +49,7 @@ pub trait Voice {
 //---------------------------------------------------------
 //		Trait Bound
 //---------------------------------------------------------
-pub fn manage_note_level<T: Voice>(t: &mut T, 
+pub fn manage_note_level<T: Voice+MsgfDisplay>(t: &mut T, 
     abuf:   &mut msgf_afrm::AudioFrame,
     aegbuf: &mut msgf_cfrm::CtrlFrame) -> bool {
     if t.status() != NoteStatus::DuringDamp {
@@ -57,7 +57,7 @@ pub fn manage_note_level<T: Voice>(t: &mut T,
         let level = aegbuf.get_max_level();
         t.put_lvl_check_buf(level);
         if msgf_if::DAMP_LIMIT_DEPTH > level {
-            println!("Damped!");
+            t.print_str("Damped!");
             t.damp();
         }
     } else {    //	Damp

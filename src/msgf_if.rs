@@ -10,7 +10,7 @@
 //
 use crate::core::*;
 use crate::engine::*;
-use crate::core::msgf_disp::Display;
+use crate::core::msgf_disp::MsgfDisplay;
 
 //---------------------------------------------------------
 //		Constants
@@ -44,7 +44,7 @@ pub struct Msgf {
 //---------------------------------------------------------
 //		Implements
 //---------------------------------------------------------
-impl msgf_disp::Display for Msgf {}
+impl msgf_disp::MsgfDisplay for Msgf {}
 impl Msgf {
     pub fn new() -> Self {
         let dprm = msgf_delay::DelayParameter {

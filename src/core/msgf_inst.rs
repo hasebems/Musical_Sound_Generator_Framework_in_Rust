@@ -9,9 +9,7 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::core::*;
-
 pub trait Inst {
-
     //fn new(inst_number: usize, vol: u8, pan: u8, exp: u8) -> Self;
     fn change_inst(&mut self, inst_number: usize, vol: u8, pan: u8, exp: u8);
     fn note_off(&mut self, dt2: u8, dt3: u8);

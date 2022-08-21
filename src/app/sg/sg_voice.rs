@@ -13,6 +13,7 @@ use std::cell::Cell;
 use crate::msgf_if;
 use crate::core::*;
 use crate::core::msgf_voice::*;
+use crate::core::msgf_disp::MsgfDisplay;
 use crate::engine::*;
 use crate::app::sg::*;
 
@@ -38,6 +39,7 @@ pub struct VoiceSg {
 //---------------------------------------------------------
 //		Implements
 //---------------------------------------------------------
+impl MsgfDisplay for VoiceSg {}
 impl PartialEq for VoiceSg {
     fn eq(&self, other: &Self) -> bool {
         self.note == other.note && self.vel == other.vel

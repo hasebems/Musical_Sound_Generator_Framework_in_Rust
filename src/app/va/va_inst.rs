@@ -13,6 +13,7 @@ use std::cell::Cell;
 use crate::msgf_if;
 use crate::core::*;
 use crate::core::msgf_voice::*;
+use crate::core::msgf_disp::MsgfDisplay;
 use crate::engine::*;
 use crate::app::va::*;
 
@@ -39,6 +40,7 @@ pub struct InstVa {
 //---------------------------------------------------------
 //		Implements
 //---------------------------------------------------------
+impl MsgfDisplay for InstVa {}
 impl Drop for InstVa {
     fn drop(&mut self) {self.vcevec.clear();}
 }
@@ -218,10 +220,5 @@ impl InstVa {
         } else {
             Some(&mut self.vcevec[return_num])
         }
-    }
-
-    fn _debug(&mut self) {
-        let sz = self.vcevec.len();
-        println!("Debug!: {}",sz);
     }
 }

@@ -10,6 +10,7 @@
 //
 use crate::*;
 use crate::core::*;
+use crate::core::msgf_disp::MsgfDisplay;
 
 //---------------------------------------------------------
 //		Definition
@@ -33,13 +34,14 @@ pub struct Part {
     program_number: u8,
     pitch_bend_value: i16,
     cc16_31_change_vprm: [u8; 16],
-	
+
     //	Composite Object
     inst: Box<dyn msgf_inst::Inst>,
 }
 //---------------------------------------------------------
 //		Implements
 //---------------------------------------------------------
+impl MsgfDisplay for Part {}
 impl Part {
     pub fn new() -> Self {
         Self {
@@ -124,7 +126,7 @@ impl Part {
             }
             _ => {}
         };
-        println!("Control Change: {}",controller);
+        //self.print_prm("Control Change: ", controller);
     }
     pub fn program_change(&mut self, dt2: u8) {
         self.program_number = dt2;
@@ -134,15 +136,15 @@ impl Part {
         let pb = self.pitch_bend_value;
         let ns = self.cc12_note_shift;
         let tn = self.cc13_tune;
+        self.print_prm("Program Change: ", dt2);
         self.inst = app::get_inst(self.program_number as usize,vol,pan,exp); //pgn,vol,pan,exp,
         self.inst.pitch(pb, ns, tn);
-        println!("Program Change: {}",dt2);
     }
     pub fn pitch_bend(&mut self, bend: i16) {
         self.pitch_bend_value = bend;
         let ns = self.cc12_note_shift;
         let tn = self.cc13_tune;
-        println!("Pitch Bend: {}",bend);
+        self.print_prm("Pitch Bend: ",bend);
         self.inst.pitch(bend, ns, tn);
     }
     pub fn process(&mut self,

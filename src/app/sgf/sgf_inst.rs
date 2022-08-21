@@ -13,6 +13,7 @@ use std::cell::Cell;
 use crate::msgf_if;
 use crate::core::*;
 use crate::core::msgf_voice::*;
+use crate::core::msgf_disp::MsgfDisplay;
 //use crate::engine::*;
 use crate::app::sgf::*;
 use crate::app::sgf::sgf_voice;
@@ -44,6 +45,7 @@ const NO_NOTE:i8 = -1;
 //---------------------------------------------------------
 //		Implements
 //---------------------------------------------------------
+impl MsgfDisplay for InstSgf {}
 impl NoteSgf {
     fn new(note: u8, _vel: u8) -> Self {
         Self {note, _vel, off: false,}
@@ -190,7 +192,7 @@ impl msgf_inst::Inst for InstSgf {
             self.vce = None;
             assert!(self.vcevec.len() > 0);
             self.remove_note(self.active_vce_index);
-            println!("Released!");
+            self.print_str("Released!");
         }
     }
 }
@@ -244,9 +246,5 @@ impl InstSgf {
         else if nt_idx < self.active_vce_index {
             self.active_vce_index -= 1;
         }
-    }
-    fn _debug(&mut self) {
-        let sz = self.vcevec.len();
-        println!("Debug!: {}",sz);
     }
 }
