@@ -52,7 +52,7 @@ impl Msgf {
             r_time: TOTAL_EFF_DLY_TIME_R,   //  0.0 - 1.0 [sec]
             att_ratio: TOTAL_EFF_ATT_RATE,
         };        
-        let msgf = Self {
+        Self {
             msg_buf: Vec::new(),
             part: Vec::new(),
             audio_buffer_l: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
@@ -63,8 +63,7 @@ impl Msgf {
             audio_buffer_total_effect_r: msgf_afrm::AudioFrame::new(0,MAX_BUFFER_SIZE),
             delay: msgf_sd_delay::SdDelay::new(&dprm),
             in_number_frames: 0,
-        };
-        msgf
+        }
     }
     pub fn init(&mut self) {    // call this fn just after new()
         for _ in 0..MAX_PART_NUM {
