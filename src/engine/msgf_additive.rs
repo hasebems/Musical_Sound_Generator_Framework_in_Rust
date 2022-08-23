@@ -10,9 +10,9 @@
 //
 use crate::msgf_if;
 use crate::core::*;
+use crate::engine::msgf_gen;
+use crate::engine::msgf_gen::*;
 use crate::engine::msgf_osc::*;
-use crate::engine::msgf_table;
-
 //---------------------------------------------------------
 //		Synth. Parameter
 //---------------------------------------------------------
@@ -128,7 +128,7 @@ impl Additive {
         let mut pls: f32 = 0.0;
         const PHASE_STREWING: f32 = 0.01;
         for j in 0..ot_num {
-            pls += msgf_table::PULSE0_1[j]
+            pls += msgf_gen::PULSE0_1[j]
                    *filter[j]
                    *Osc::pseudo_sine(phase*(j as f32)+PHASE_STREWING); 
         }
@@ -142,7 +142,9 @@ impl Additive {
             self.base_pitch = self.target_pitch;
         }
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {
+}
+impl Engine for Additive {
+    fn process_ac(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {
         let lvl_variable = self.prms_variable.magnitude;
         if self.target_pitch != self.base_pitch {
             //  Portameneto Operation
@@ -151,7 +153,7 @@ impl Additive {
         }
         let delta_phase = self.base_pitch*self.cnt_ratio/msgf_if::SAMPLING_FREQ;
         let mut phase = self.next_phase;
-        let ot: usize = (msgf_table::ABORT_FREQUENCY/self.base_pitch) as usize;
+        let ot: usize = (msgf_gen::ABORT_FREQUENCY/self.base_pitch) as usize;
         let filter: [f32; 33] = self.generate_filter();
         let max_overtone = if ot <= 32 {ot} else {32};
         for i in 0..abuf.sample_number {

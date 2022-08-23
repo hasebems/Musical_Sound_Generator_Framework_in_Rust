@@ -10,8 +10,8 @@
 //
 use crate::msgf_if;
 use crate::core::*;
-use crate::engine::msgf_table;
-
+use crate::engine::msgf_gen;
+use crate::engine::msgf_gen::*;
 //---------------------------------------------------------
 //		Synth. Parameter
 //---------------------------------------------------------
@@ -69,7 +69,7 @@ impl Osc {
         let tune_note: u8 = Osc::limit_note(note as i32 + coarse_tune);
         let solfa_name: u8 = (tune_note + 3)%12;
         let octave: usize = ((tune_note as usize) + 3)/12;
-        let mut ap = msgf_table::PITCH_OF_A[octave];
+        let mut ap = msgf_gen::PITCH_OF_A[octave];
         let ratio = (2_f32.ln()/12_f32).exp();
         for _ in 0..solfa_name {
             ap *= ratio;
@@ -89,8 +89,8 @@ impl Osc {
         //let mut y = -(x1*x2*x3*SIN_TABLE[phase_locate+1]/6.0) + (x0*x2*x3*SIN_TABLE[phase_locate+2]/2.0)
         //            -(x0*x1*x3*SIN_TABLE[phase_locate+3]/2.0) + (x0*x1*x2*SIN_TABLE[phase_locate+4]/6.0);
         //assert!(phase_locate < 258, "{},{},{},{}:{}->{}", x0,x1,x2,x3,phase_locate,y);
-        let y0 = msgf_table::SIN_TABLE[phase_locate+2];                    //  linear interpolation
-        let mut y = (msgf_table::SIN_TABLE[phase_locate+3] - y0)*x1 + y0;  //
+        let y0 = msgf_gen::SIN_TABLE[phase_locate+2];                    //  linear interpolation
+        let mut y = (msgf_gen::SIN_TABLE[phase_locate+3] - y0)*x1 + y0;  //
         if y > 1.0 { y = 1.0 }
         else if y < -1.0 { y = -1.0 }
         y
@@ -144,17 +144,19 @@ impl Osc {
                     for j in 1..oti {
                         let ot:f32 = j as f32;
                         let phase:f32 = x * ot;
-                        pls += 0.5*msgf_table::PULSE0_1[j]*Osc::pseudo_sine(phase);
+                        pls += 0.5*msgf_gen::PULSE0_1[j]*Osc::pseudo_sine(phase);
                     }
                     pls
                 }
             }
         }
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {
+}
+impl Engine for Osc {
+    fn process_ac(&mut self, abuf: &mut msgf_afrm::AudioFrame, lbuf: &mut msgf_cfrm::CtrlFrame) {
         let delta_phase = self.base_pitch*self.cnt_ratio/msgf_if::SAMPLING_FREQ;
         let mut phase = self.next_phase;
-        let max_overtone: usize = (msgf_table::ABORT_FREQUENCY/self.base_pitch) as usize;
+        let max_overtone: usize = (msgf_gen::ABORT_FREQUENCY/self.base_pitch) as usize;
         let wave_func: WvFn = self.get_wave_func();
         for i in 0..abuf.sample_number {
             abuf.set_val(i, wave_func(phase, max_overtone));

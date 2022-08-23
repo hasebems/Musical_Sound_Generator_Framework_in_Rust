@@ -10,6 +10,7 @@
 //
 use crate::msgf_if;
 use crate::core::*;
+use crate::engine::msgf_gen::*;
 
 //---------------------------------------------------------
 //		Synth. Parameter
@@ -92,7 +93,9 @@ impl Biquad {
         self.y_z1 = output;
         output
     }
-    pub fn process(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
+}
+impl Engine for Biquad {
+    fn process_a(&mut self, abuf: &mut msgf_afrm::AudioFrame) {
         for i in 0..abuf.sample_number {
             if let Some(x) = abuf.get_from_abuf(i){
                 abuf.set_val(i, self.core_job(x));

@@ -9,6 +9,7 @@
 //  https://opensource.org/licenses/mit-license.php
 //
 use crate::core::*;
+use crate::engine::msgf_gen::*;
 
 //---------------------------------------------------------
 //		Synth. Parameter
@@ -126,7 +127,9 @@ impl Aeg {
         self.interpolate_value = intplt;
         eg_diff*intplt + self.src_value
     }
-    pub fn process(&mut self, cbuf: &mut msgf_cfrm::CtrlFrame) {
+}
+impl Engine for Aeg {
+    fn process_c(&mut self, cbuf: &mut msgf_cfrm::CtrlFrame) {
         let eg_diff: f32 = self.tgt_value - self.src_value;
         for i in 0..cbuf.sample_number {
             let mut eg_crnt: f32 = self.tgt_value;

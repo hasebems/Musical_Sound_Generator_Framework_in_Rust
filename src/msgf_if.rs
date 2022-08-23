@@ -10,8 +10,8 @@
 //
 use crate::core::*;
 use crate::engine::*;
+use crate::engine::msgf_gen::*;
 use crate::core::msgf_disp::MsgfDisplay;
-
 //---------------------------------------------------------
 //		Constants
 //---------------------------------------------------------
@@ -146,8 +146,8 @@ impl Msgf {
             self.audio_buffer_total_effect_r.mix_and_check_no_sound(&mut self.audio_buffer_send_effect_r);  // R
         };
         //  Total Effect をかける in:total_effect -> out:send_effect
-        self.delay.process([&mut self.audio_buffer_total_effect_l, &mut self.audio_buffer_total_effect_r],
-                           [&mut self.audio_buffer_send_effect_l, &mut self.audio_buffer_send_effect_r]);
+        self.delay.process_as2([&mut self.audio_buffer_total_effect_l, &mut self.audio_buffer_total_effect_r],
+                               [&mut self.audio_buffer_send_effect_l, &mut self.audio_buffer_send_effect_r]);
         //  Total Effect を sysbuf に足す
         self.audio_buffer_send_effect_l.add_to_sysbuf(abuf_l);  // L
         self.audio_buffer_send_effect_r.add_to_sysbuf(abuf_r);  // R

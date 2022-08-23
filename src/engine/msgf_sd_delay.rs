@@ -14,7 +14,7 @@
 //
 use crate::core::*;
 use crate::engine::msgf_delay;
-
+use crate::engine::msgf_gen::*;
 //---------------------------------------------------------
 //		Synth. Parameter
 //---------------------------------------------------------
@@ -61,7 +61,9 @@ impl SdDelay {
             self.dbuf[str].wr_ptr = 0;
         }
     }
-    pub fn process(&mut self, 
+}
+impl Engine for SdDelay {
+    fn process_as2(&mut self, 
         in_abuf: [&mut msgf_afrm::AudioFrame;2], 
         out_abuf: [&mut msgf_afrm::AudioFrame;2]) {
         let snum = in_abuf[0].sample_number;

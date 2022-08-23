@@ -15,6 +15,7 @@ use crate::core::*;
 use crate::core::msgf_voice::*;
 use crate::core::msgf_disp::MsgfDisplay;
 use crate::engine::*;
+use crate::engine::msgf_gen::Engine;
 use crate::app::sg::*;
 
 //---------------------------------------------------------
@@ -88,14 +89,14 @@ impl msgf_voice::Voice for VoiceSg {
         let lbuf = &mut msgf_cfrm::CtrlFrame::new(cbuf_size);
 
         //  LFO
-        self.lfo.process(lbuf);
+        self.lfo.process_c(lbuf);
 
         //  Oscillator
-        self.osc.process(abuf, lbuf);
+        self.osc.process_ac(abuf, lbuf);
 
         //  AEG
         let aegbuf = &mut msgf_cfrm::CtrlFrame::new(cbuf_size);
-        self.aeg.process(aegbuf);
+        self.aeg.process_c(aegbuf);
 
         //  Volume
         for i in 0..abuf.sample_number {

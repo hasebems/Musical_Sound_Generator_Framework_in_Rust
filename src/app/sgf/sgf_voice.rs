@@ -15,8 +15,8 @@ use crate::core::*;
 use crate::core::msgf_voice::*;
 use crate::core::msgf_disp::MsgfDisplay;
 use crate::engine::*;
+use crate::engine::msgf_gen::Engine;
 use crate::app::sgf::*;
-
 //---------------------------------------------------------
 //		Definition
 //---------------------------------------------------------
@@ -103,19 +103,19 @@ impl msgf_voice::Voice for VoiceSgf {
         let lbuf = &mut msgf_cfrm::CtrlFrame::new(cbuf_size);
 
         //  LFO
-        self.lfo.process(lbuf);
+        self.lfo.process_c(lbuf);
 
         //  Oscillator
-        self.vcl.process(abuf, lbuf);
+        self.vcl.process_ac(abuf, lbuf);
 
         //  Filter
-        self.lpf.process(abuf);
-        self.frm1.process(abuf);
-        self.frm2.process(abuf);
+        self.lpf.process_a(abuf);
+        self.frm1.process_a(abuf);
+        self.frm2.process_a(abuf);
 
         //  AEG
         let aegbuf = &mut msgf_cfrm::CtrlFrame::new(cbuf_size);
-        self.aeg.process(aegbuf);
+        self.aeg.process_c(aegbuf);
 
         //  Volume
         let tmpvol = self.max_note_vol*self.fmnt_adjust_vol*self.scl_adjust_vol;

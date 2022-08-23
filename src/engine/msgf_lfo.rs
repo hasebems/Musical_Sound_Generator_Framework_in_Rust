@@ -10,6 +10,7 @@
 //
 use crate::msgf_if;
 use crate::core::*;
+use crate::engine::msgf_gen::*;
 
 //---------------------------------------------------------
 //		Synth. Parameter
@@ -115,7 +116,9 @@ impl Lfo {
     pub fn start(&mut self) {
         self.dac_counter = 0;
     }
-    pub fn process(&mut self, abuf: &mut msgf_cfrm::CtrlFrame) {
+}
+impl Engine for Lfo {
+    fn process_c(&mut self, abuf: &mut msgf_cfrm::CtrlFrame) {
         let mut phase = self.next_phase;
         for i in 0..abuf.sample_number {
             let mut value = phase;

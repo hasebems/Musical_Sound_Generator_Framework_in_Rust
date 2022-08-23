@@ -15,6 +15,7 @@ use crate::core::*;
 use crate::core::msgf_voice::*;
 use crate::core::msgf_disp::MsgfDisplay;
 use crate::engine::*;
+use crate::engine::msgf_gen::Engine;
 use crate::app::va::*;
 
 //---------------------------------------------------------
@@ -168,7 +169,7 @@ impl msgf_inst::Inst for InstVa {
         abuf_r.mul_and_mix(&mut self.inst_audio, self.pan);
 
         //  with Effect
-        self.delay.process([abuf_l, abuf_r]);
+        self.delay.process_as([abuf_l, abuf_r]);
 
         for i in 0..sz {
             if ch_ended[i] {
