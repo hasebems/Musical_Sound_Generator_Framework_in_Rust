@@ -101,11 +101,11 @@ impl msgf_inst::Inst for InstVa {
         let nt = self.search_note( dt2, NoteStatus::DuringNoteOn);
         if let Some(vce) = nt {
             let pmd = (dt3 as f32)/(127.0*12.0);    // MAX+-100[cent]
-            vce.change_pmd(pmd);
+            vce.change_pmd(pmd);    //  0 - 1/12
         }
     }
     fn modulation(&mut self, value: u8) {
-        let mdlt = 0.5f32*(value as f32)/127.0;
+        let mdlt = 0.5f32*(value as f32)/127.0; // 0.0 - 0.5
         self.mdlt = mdlt;
         self.vcevec.iter_mut().for_each(|vce| vce.change_pmd(mdlt));
     }

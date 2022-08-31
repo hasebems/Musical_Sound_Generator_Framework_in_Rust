@@ -33,6 +33,7 @@ pub struct VoiceVa {
     aeg: msgf_aeg::Aeg,
     lfo: msgf_lfo::Lfo,
     max_note_vol: f32,
+    emphasis_vol: f32,
     ended: bool,
 }
 //---------------------------------------------------------
@@ -58,6 +59,7 @@ impl msgf_voice::Voice for VoiceVa {
     fn velocity(&self) -> u8 {self.vel}
     fn change_pmd(&mut self, value: f32) {
         self.osc.change_pmd(value);
+        self.emphasis_vol = 1.0 + value*6.0; // 1.0 - 1.5
     }
     fn amplitude(&mut self, volume: u8, expression: u8) {
         self.max_note_vol = VoiceVa::calc_vol(volume, expression);
@@ -90,7 +92,7 @@ impl msgf_voice::Voice for VoiceVa {
         //  Volume
         for i in 0..abuf.sample_number {
             let aeg = aegbuf.ctrl_for_audio(i);
-            abuf.mul_rate(i, self.max_note_vol*aeg);
+            abuf.mul_rate(i, self.max_note_vol*self.emphasis_vol*aeg);
         }
         msgf_voice::manage_note_level(self, abuf, aegbuf)
     }
@@ -122,6 +124,7 @@ impl VoiceVa {
             aeg: msgf_aeg::Aeg::new(&tprm.aeg),
             lfo: msgf_lfo::Lfo::new(&tprm.lfo),
             max_note_vol: VoiceVa::calc_vol(vol, exp),
+            emphasis_vol: 1.0,
             ended: false,
         }
     }

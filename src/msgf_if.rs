@@ -16,7 +16,7 @@ use crate::core::msgf_disp::MsgfDisplay;
 //		Constants
 //---------------------------------------------------------
 //  configuration
-pub const REV_NUM: &str = "rev.0-0-7";
+pub const REV_NUM: &str = "rev.0-0-9";
 pub const MAX_PART_NUM: usize = 10;
 pub const MAX_BUFFER_SIZE: usize = 1024;
 pub const SAMPLING_FREQ: f32 = 44100.0;
